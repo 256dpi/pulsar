@@ -92,7 +92,7 @@ func (c *Client) Lookup(topic string, authoritative bool) (*LookupResponse, erro
 	// create lookup frame
 	lookup := &frame.Lookup{
 		Topic:         topic,
-		RequestID:     c.requests,
+		RID:           c.requests,
 		Authoritative: authoritative,
 	}
 
@@ -132,6 +132,102 @@ func (c *Client) Lookup(topic string, authoritative bool) (*LookupResponse, erro
 	}
 
 	return resp, nil
+}
+
+func (c *Client) CreateProducer(name, topic string) (uint64, int64, error) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	// increment counters
+	c.requests++
+	c.producers++
+
+	// create producer frame
+	producer := &frame.Producer{
+		RID:   c.requests,
+		ID:    c.producers,
+		Name:  name,
+		Topic: topic,
+	}
+
+	// send frame
+	err := c.conn.Send(producer)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// await response
+	in, err := c.conn.Receive()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// check for error frame
+	if _error, ok := in.(*frame.Error); ok {
+		return 0, 0, fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message)
+	}
+
+	// get producer success frame
+	producerSuccess, ok := in.(*frame.ProducerSuccess)
+	if !ok {
+		return 0, 0, fmt.Errorf("expected to receive a connected frame")
+	}
+
+	// check request id
+	if producerSuccess.RID != c.requests {
+		return 0, 0, fmt.Errorf("not matching request ids")
+	}
+
+	// check name
+	if producerSuccess.Name != name {
+		return 0, 0, fmt.Errorf("not matching producer names")
+	}
+
+	return c.producers, producerSuccess.LastSequence, nil
+}
+
+func (c *Client) CloseProducer(id uint64) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	// increment counters
+	c.requests++
+
+	// create producer frame
+	producer := &frame.CloseProducer{
+		RID: c.requests,
+		ID:  id,
+	}
+
+	// send frame
+	err := c.conn.Send(producer)
+	if err != nil {
+		return err
+	}
+
+	// await response
+	in, err := c.conn.Receive()
+	if err != nil {
+		return err
+	}
+
+	// check for error frame
+	if _error, ok := in.(*frame.Error); ok {
+		return fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message)
+	}
+
+	// get success frame
+	success, ok := in.(*frame.Success)
+	if !ok {
+		return fmt.Errorf("expected to receive a sucess frame")
+	}
+
+	// check request id
+	if success.RID != c.requests {
+		return fmt.Errorf("not matching request ids")
+	}
+
+	return nil
 }
 
 func (c *Client) Close() error {

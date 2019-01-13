@@ -18,10 +18,16 @@ type Connect struct {
 func (c *Connect) Encode() (*pb.BaseCommand, error) {
 	// prepare connect command
 	connect := &pb.CommandConnect{}
+
+	// set fields
 	connect.ClientVersion = proto.String(c.ClientVersion)
 	connect.AuthMethod = &authMethodNone
 	connect.ProtocolVersion = &protocolVersion
-	connect.ProxyToBrokerUrl = proto.String(c.ProxyURL)
+
+	// set proxy url if available
+	if c.ProxyURL != "" {
+		connect.ProxyToBrokerUrl = proto.String(c.ProxyURL)
+	}
 
 	// prepare base command
 	base := &pb.BaseCommand{

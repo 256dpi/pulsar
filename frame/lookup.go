@@ -6,8 +6,8 @@ import (
 )
 
 type Lookup struct {
+	RID           uint64
 	Topic         string
-	RequestID     uint64
 	Authoritative bool
 }
 
@@ -15,7 +15,7 @@ func (l *Lookup) Encode() (*pb.BaseCommand, error) {
 	// prepare lookup command
 	lookup := &pb.CommandLookupTopic{}
 	lookup.Topic = proto.String(l.Topic)
-	lookup.RequestId = proto.Uint64(l.RequestID)
+	lookup.RequestId = proto.Uint64(l.RID)
 	lookup.Authoritative = proto.Bool(l.Authoritative)
 
 	// prepare base command
@@ -36,10 +36,10 @@ const (
 )
 
 type LookupResponse struct {
+	RID                    uint64
 	BrokerServiceURL       string
 	BrokerServiceURLTLS    string
 	Response               LookupType
-	RequestID              uint64
 	Authoritative          bool
 	Error                  string
 	Message                string
@@ -48,10 +48,10 @@ type LookupResponse struct {
 
 func (r *LookupResponse) Decode(bc *pb.BaseCommand) error {
 	// set fields
+	r.RID = bc.LookupTopicResponse.GetRequestId()
 	r.BrokerServiceURL = bc.LookupTopicResponse.GetBrokerServiceUrl()
 	r.BrokerServiceURLTLS = bc.LookupTopicResponse.GetBrokerServiceUrlTls()
 	r.Response = LookupType(bc.LookupTopicResponse.GetResponse())
-	r.RequestID = bc.LookupTopicResponse.GetRequestId()
 	r.Authoritative = bc.LookupTopicResponse.GetAuthoritative()
 	r.Error = pb.ServerError_name[int32(bc.LookupTopicResponse.GetError())]
 	r.Message = bc.LookupTopicResponse.GetMessage()

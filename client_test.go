@@ -55,3 +55,19 @@ func TestLookup(t *testing.T) {
 	err = client2.Close()
 	assert.NoError(t, err)
 }
+
+func TestCreateProducer(t *testing.T) {
+	client, err := Connect(ClientConfig{})
+	assert.NoError(t, err)
+
+	id, lastSeq, err := client.CreateProducer("test", "test")
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(1), id)
+	assert.Equal(t, int64(-1), lastSeq)
+
+	err = client.CloseProducer(id)
+	assert.NoError(t, err)
+
+	err = client.Close()
+	assert.NoError(t, err)
+}
