@@ -415,3 +415,135 @@ func (c *Client) Close() error {
 
 	return nil
 }
+
+func (c *Client) receiver() {
+	for {
+		// receive next frame
+		f, err := c.conn.Receive()
+		if err != nil {
+			// TODO: Handle error.
+		}
+
+		// handle frame
+		err = c.handleFrame(f)
+		if err != nil {
+			// TODO: Handle error.
+		}
+	}
+}
+
+func (c *Client) handleFrame(f frame.Frame) error {
+	// handle frame
+	switch f.Type() {
+	case frame.CONNECT:
+		// not implemented
+	case frame.CONNECTED:
+		// not implemented
+	case frame.SUBSCRIBE:
+		// not implemented
+	case frame.PRODUCER:
+		// not implemented
+	case frame.SEND:
+		// not implemented
+	case frame.SEND_RECEIPT:
+		return c.handleSendReceipt(f.(*frame.SendReceipt))
+	case frame.SEND_ERROR:
+		return c.handleSendError(f.(*frame.SendError))
+	case frame.MESSAGE:
+		return c.handleMessage(f.(*frame.Message))
+	case frame.ACK:
+		// not implemented
+	case frame.FLOW:
+		// not implemented
+	case frame.UNSUBSCRIBE:
+		// not implemented
+	case frame.SUCCESS:
+		return c.handleSuccess(f.(*frame.Success))
+	case frame.ERROR:
+		return c.handleError(f.(*frame.Error))
+	case frame.CLOSE_PRODUCER:
+		return c.handleCloseProducer(f.(*frame.CloseProducer))
+	case frame.CLOSE_CONSUMER:
+		return c.handleCloseConsumer(f.(*frame.CloseConsumer))
+	case frame.PRODUCER_SUCCESS:
+		return c.handleProducerSuccess(f.(*frame.ProducerSuccess))
+	case frame.PING:
+		return c.handlePing(f.(*frame.Ping))
+	case frame.PONG:
+		// not implemented
+	case frame.REDELIVER_UNACKNOWLEDGED_MESSAGES:
+		// not implemented
+	case frame.PARTITIONED_METADATA:
+		// not implemented
+	case frame.PARTITIONED_METADATA_RESPONSE:
+		// TODO: Implement.
+	case frame.LOOKUP:
+		// not implemented
+	case frame.LOOKUP_RESPONSE:
+		return c.handleLookupResponse(f.(*frame.LookupResponse))
+	case frame.CONSUMER_STATS:
+		// not implemented
+	case frame.CONSUMER_STATS_RESPONSE:
+		// TODO: Implement.
+	case frame.REACHED_END_OF_TOPIC:
+		// TODO: Implement.
+	case frame.SEEK:
+		// not implemented
+	case frame.GET_LAST_MESSAGE_ID:
+		// not implemented
+	case frame.GET_LAST_MESSAGE_ID_RESPONSE:
+		// TODO: Implement.
+	case frame.ACTIVE_CONSUMER_CHANGE:
+		// TODO: Implement.
+	case frame.GET_TOPICS_OF_NAMESPACE:
+		// not implemented
+	case frame.GET_TOPICS_OF_NAMESPACE_RESPONSE:
+		// TODO: Implement.
+	case frame.GET_SCHEMA:
+		// not implemented
+	case frame.GET_SCHEMA_RESPONSE:
+		// TODO: Implement.
+	}
+
+	return nil
+}
+
+func (c *Client) handleSendReceipt(f *frame.SendReceipt) error {
+	return nil
+}
+
+func (c *Client) handleSendError(f *frame.SendError) error {
+	return nil
+}
+
+func (c *Client) handleMessage(f *frame.Message) error {
+	return nil
+}
+
+func (c *Client) handleSuccess(f *frame.Success) error {
+	return nil
+}
+
+func (c *Client) handleError(f *frame.Error) error {
+	return nil
+}
+
+func (c *Client) handleCloseProducer(f *frame.CloseProducer) error {
+	return nil
+}
+
+func (c *Client) handleCloseConsumer(f *frame.CloseConsumer) error {
+	return nil
+}
+
+func (c *Client) handleProducerSuccess(f *frame.ProducerSuccess) error {
+	return nil
+}
+
+func (c *Client) handlePing(f *frame.Ping) error {
+	return nil
+}
+
+func (c *Client) handleLookupResponse(f *frame.LookupResponse) error {
+	return nil
+}
