@@ -16,19 +16,19 @@ var crcTable = crc32.MakeTable(crc32.Castagnoli)
 
 type Frame interface{}
 
-type SimpleCommandDecoder interface {
+type SimpleDecoder interface {
 	Decode(*pb.BaseCommand) error
 }
 
-type SimpleCommandEncoder interface {
+type SimpleEncoder interface {
 	Encode() (*pb.BaseCommand, error)
 }
 
-type PayloadCommandDecoder interface {
+type PayloadDecoder interface {
 	Decode(*pb.BaseCommand, *pb.MessageMetadata, []byte) error
 }
 
-type PayloadCommandEncoder interface {
+type PayloadEncoder interface {
 	Encode() (*pb.BaseCommand, *pb.MessageMetadata, []byte, error)
 }
 
@@ -75,7 +75,7 @@ func Write(frame Frame, writer io.Writer) error {
 	return nil
 }
 
-func Decode(data []byte) (interface{}, error) {
+func Decode(data []byte) (Frame, error) {
 	// get total size
 	totalSize := len(data)
 	if totalSize < 4 {
@@ -114,9 +114,12 @@ func Decode(data []byte) (interface{}, error) {
 		}
 
 		// get checksum
-		// checksum := data[commandSize+4+2:commandSize+4+2+4]
+		checksum := binary.BigEndian.Uint32(data[commandSize+4+2 : commandSize+4+2+4])
 
-		// TODO: Check checksum.
+		// check checksum
+		if checksum != crc32.Checksum(data[commandSize+4+2+4:], crcTable) {
+			return nil, fmt.Errorf("checksum mismatch")
+		}
 
 		// get metadata size
 		metadataSize := int(binary.BigEndian.Uint32(data[commandSize+4+2+4 : commandSize+4+2+4+4]))
@@ -222,9 +225,9 @@ func Decode(data []byte) (interface{}, error) {
 	return nil, fmt.Errorf("unsupported command type %d", base.GetType())
 }
 
-func Encode(frame interface{}) ([]byte, error) {
+func Encode(frame Frame) ([]byte, error) {
 	// handle simple encoder
-	if sce, ok := frame.(SimpleCommandEncoder); ok {
+	if sce, ok := frame.(SimpleEncoder); ok {
 		// encode frame
 		base, err := sce.Encode()
 		if err != nil {
@@ -259,7 +262,7 @@ func Encode(frame interface{}) ([]byte, error) {
 	}
 
 	// handle payload encoder
-	if pce, ok := frame.(PayloadCommandEncoder); ok {
+	if pce, ok := frame.(PayloadEncoder); ok {
 		// encode frame
 		base, metadata, payload, err := pce.Encode()
 		if err != nil {
