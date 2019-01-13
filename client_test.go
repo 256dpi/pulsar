@@ -157,6 +157,7 @@ func TestConsumerAndProducer(t *testing.T) {
 		close(done2)
 	}, func(msg *frame.Message, err error) {
 		assert.NoError(t, err)
+		assert.Equal(t, []byte("hello"), msg.Message)
 
 		mid = msg.MessageID
 		close(done4)

@@ -176,7 +176,7 @@ func Decode(data []byte) (Frame, error) {
 		}
 
 		// get payload
-		payload = data[commandSize+4+2+4+4+metadataSize : len(data)-1]
+		payload = data[commandSize+4+2+4+4+metadataSize:]
 	}
 
 	// set command
