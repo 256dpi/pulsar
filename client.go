@@ -28,7 +28,7 @@ type LookupResponse struct {
 
 type Client struct {
 	config ClientConfig
-	conn   Conn
+	conn   *Conn
 
 	producers uint64
 	consumers uint64

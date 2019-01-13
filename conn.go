@@ -13,13 +13,9 @@ import (
 	"github.com/256dpi/mercury"
 )
 
-type Conn interface {
-	Send(cmd frame.Frame) error
-	Receive() (frame.Frame, error)
-	Close() error
-}
-
-type IOConn struct {
+// Conn is a low level connection to a pulsar broker that can send and receive
+// frames.
+type Conn struct {
 	reader *bufio.Reader
 	writer *mercury.Writer
 	closer io.Closer
@@ -28,7 +24,8 @@ type IOConn struct {
 	rMutex sync.Mutex
 }
 
-func Dial(addr string) (*IOConn, error) {
+// Dial will connect to the specified broker and establish a connection.
+func Dial(addr string) (*Conn, error) {
 	// set default addr
 	if addr == "" {
 		addr = "pulsar://localhost:6650"
@@ -46,18 +43,20 @@ func Dial(addr string) (*IOConn, error) {
 		return nil, err
 	}
 
-	return NewIOConn(conn), nil
+	return NewConn(conn), nil
 }
 
-func NewIOConn(carrier io.ReadWriteCloser) *IOConn {
-	return &IOConn{
+// NewConn will create a connection from a ReadWriteCloser.
+func NewConn(carrier io.ReadWriteCloser) *Conn {
+	return &Conn{
 		reader: bufio.NewReader(carrier),
 		closer: carrier,
 		writer: mercury.NewWriter(carrier, time.Millisecond),
 	}
 }
 
-func (c *IOConn) Send(f frame.Frame) error {
+// Send will send the specified frame.
+func (c *Conn) Send(f frame.Frame) error {
 	c.sMutex.Lock()
 	defer c.sMutex.Unlock()
 
@@ -70,7 +69,8 @@ func (c *IOConn) Send(f frame.Frame) error {
 	return nil
 }
 
-func (c *IOConn) Receive() (frame.Frame, error) {
+// Receive will block and receive the next frame.
+func (c *Conn) Receive() (frame.Frame, error) {
 	c.rMutex.Lock()
 	defer c.rMutex.Unlock()
 
@@ -83,7 +83,8 @@ func (c *IOConn) Receive() (frame.Frame, error) {
 	return f, nil
 }
 
-func (c *IOConn) Close() error {
+// Close will close the connection.
+func (c *Conn) Close() error {
 	c.sMutex.Lock()
 	defer c.sMutex.Unlock()
 
