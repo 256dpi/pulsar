@@ -2,11 +2,12 @@ package frame
 
 import (
 	"github.com/256dpi/pulsar/pb"
+
 	"github.com/golang/protobuf/proto"
 )
 
 type CloseProducer struct {
-	ID  uint64
+	PID uint64
 	RID uint64
 }
 
@@ -15,7 +16,7 @@ func (c *CloseProducer) Encode() (*pb.BaseCommand, error) {
 	closeProducer := &pb.CommandCloseProducer{}
 
 	// set fields
-	closeProducer.ProducerId = proto.Uint64(c.ID)
+	closeProducer.ProducerId = proto.Uint64(c.PID)
 	closeProducer.RequestId = proto.Uint64(c.RID)
 
 	// prepare base command
@@ -28,7 +29,7 @@ func (c *CloseProducer) Encode() (*pb.BaseCommand, error) {
 }
 
 type CloseConsumer struct {
-	ID  uint64
+	CID uint64
 	RID uint64
 }
 
@@ -37,7 +38,7 @@ func (c *CloseConsumer) Encode() (*pb.BaseCommand, error) {
 	closeConsumer := &pb.CommandCloseConsumer{}
 
 	// set fields
-	closeConsumer.ConsumerId = proto.Uint64(c.ID)
+	closeConsumer.ConsumerId = proto.Uint64(c.CID)
 	closeConsumer.RequestId = proto.Uint64(c.RID)
 
 	// prepare base command

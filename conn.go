@@ -9,8 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/256dpi/mercury"
 	"github.com/256dpi/pulsar/frame"
+
+	"github.com/256dpi/mercury"
 )
 
 type Conn interface {

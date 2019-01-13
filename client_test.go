@@ -3,6 +3,8 @@ package pulsar
 import (
 	"testing"
 
+	"github.com/256dpi/pulsar/frame"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -72,6 +74,21 @@ func TestCreateProducer(t *testing.T) {
 
 	err = client.Send(id, seq, []byte("hello"))
 	assert.NoError(t, err)
+
+	err = client.CloseProducer(id)
+	assert.NoError(t, err)
+
+	err = client.Close()
+	assert.NoError(t, err)
+}
+
+func TestCreateConsumer(t *testing.T) {
+	client, err := Connect(ClientConfig{})
+	assert.NoError(t, err)
+
+	id, err := client.CreateConsumer("test", "test", "test", frame.Shared, false)
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(0), id)
 
 	err = client.CloseProducer(id)
 	assert.NoError(t, err)

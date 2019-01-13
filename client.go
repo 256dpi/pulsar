@@ -240,11 +240,110 @@ func (c *Client) CloseProducer(id uint64) error {
 	// create producer frame
 	producer := &frame.CloseProducer{
 		RID: rid,
-		ID:  id,
+		PID: id,
 	}
 
 	// send frame
 	err := c.conn.Send(producer)
+	if err != nil {
+		return err
+	}
+
+	// await response
+	in, err := c.conn.Receive()
+	if err != nil {
+		return err
+	}
+
+	// check for error frame
+	if _error, ok := in.(*frame.Error); ok {
+		return fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message)
+	}
+
+	// get success frame
+	success, ok := in.(*frame.Success)
+	if !ok {
+		return fmt.Errorf("expected to receive a sucess frame")
+	}
+
+	// check request id
+	if success.RID != rid {
+		return fmt.Errorf("not matching request ids")
+	}
+
+	return nil
+}
+
+func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionType, durable bool) (uint64, error) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	// increment counters
+	rid := c.requests
+	cid := c.consumers
+	c.requests++
+	c.consumers++
+
+	// create subscribe frame
+	subscribe := &frame.Subscribe{
+		RID:          rid,
+		CID:          cid,
+		Name:         name,
+		Topic:        topic,
+		Subscription: sub,
+		Type:         typ,
+		Durable:      durable,
+		//StartMessageID
+		//InitialPosition
+	}
+
+	// send frame
+	err := c.conn.Send(subscribe)
+	if err != nil {
+		return 0, err
+	}
+
+	// await response
+	in, err := c.conn.Receive()
+	if err != nil {
+		return 0, err
+	}
+
+	// check for error frame
+	if _error, ok := in.(*frame.Error); ok {
+		return 0, fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message)
+	}
+
+	// get success frame
+	success, ok := in.(*frame.Success)
+	if !ok {
+		return 0, fmt.Errorf("expected to receive a success frame")
+	}
+
+	// check request id
+	if success.RID != rid {
+		return 0, fmt.Errorf("not matching request ids")
+	}
+
+	return cid, nil
+}
+
+func (c *Client) CloseConsumer(id uint64) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	// increment counters
+	rid := c.requests
+	c.requests++
+
+	// create consumer frame
+	consumer := &frame.CloseConsumer{
+		RID: rid,
+		CID: id,
+	}
+
+	// send frame
+	err := c.conn.Send(consumer)
 	if err != nil {
 		return err
 	}
