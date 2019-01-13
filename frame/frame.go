@@ -4,9 +4,14 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"hash/crc32"
 
 	"github.com/256dpi/pulsar/pb"
 )
+
+var magicByte = []byte{0x0e, 0x01}
+
+var crcTable = crc32.MakeTable(crc32.Castagnoli)
 
 type Frame interface{}
 
@@ -60,7 +65,7 @@ func Decode(data []byte) (interface{}, error) {
 	if restOfFrame > 0 {
 		// get magic number
 		magicNumber := data[commandSize+4 : commandSize+4+2]
-		if !bytes.Equal(magicNumber, []byte{0x0e, 0x01}) {
+		if !bytes.Equal(magicNumber, magicByte) {
 			return nil, fmt.Errorf("invalid magic number")
 		}
 
@@ -149,6 +154,7 @@ func Decode(data []byte) (interface{}, error) {
 func Encode(frame interface{}) ([]byte, error) {
 	// handle simple encoder
 	if sce, ok := frame.(SimpleCommandEncoder); ok {
+		// encode frame
 		base, err := sce.Encode()
 		if err != nil {
 			return nil, err
@@ -182,8 +188,63 @@ func Encode(frame interface{}) ([]byte, error) {
 	}
 
 	// handle payload encoder
-	if _, ok := frame.(PayloadCommandEncoder); ok {
+	if pce, ok := frame.(PayloadCommandEncoder); ok {
+		// encode frame
+		base, metadata, payload, err := pce.Encode()
+		if err != nil {
+			return nil, err
+		}
 
+		// marshal base
+		baseBytes, err := base.Marshal()
+		if err != nil {
+			return nil, err
+		}
+
+		// marshal metadata
+		metadataBytes, err := metadata.Marshal()
+		if err != nil {
+			return nil, err
+		}
+
+		// get command, metadata and payload size
+		commandSize := len(baseBytes)
+		metadataSize := len(metadataBytes)
+		payloadSize := len(payload)
+
+		// compute total size
+		totalSize := 4 + commandSize + 2 + 4 + 4 + metadataSize + payloadSize
+
+		// allocate final slice
+		data := make([]byte, 4+totalSize)
+
+		// write total size
+		binary.BigEndian.PutUint32(data, uint32(totalSize))
+
+		// write command size
+		binary.BigEndian.PutUint32(data[4:], uint32(commandSize))
+
+		// write command
+		copy(data[4+4:], baseBytes)
+
+		/* [totalSize][commandSize][message][magicNumber][checksum][metadataSize][metadata][payload] */
+
+		// write magic number
+		copy(data[4+4+commandSize:], magicByte)
+
+		// write metadata size
+		binary.BigEndian.PutUint32(data[4+4+commandSize+2+4:], uint32(metadataSize))
+
+		// write metadata
+		copy(data[4+4+commandSize+2+4+4:], metadataBytes)
+
+		// write payload
+		copy(data[4+4+commandSize+2+4+4+metadataSize:], payload)
+
+		// write checksum
+		binary.BigEndian.PutUint32(data[4+4+commandSize+2:], crc32.Checksum(data[4+4+commandSize+2+4:], crcTable))
+
+		return data, nil
 	}
 
 	return nil, fmt.Errorf("unable to encode frame")

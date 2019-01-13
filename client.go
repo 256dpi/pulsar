@@ -87,12 +87,13 @@ func (c *Client) Lookup(topic string, authoritative bool) (*LookupResponse, erro
 	defer c.mutex.Unlock()
 
 	// increment counters
+	rid := c.requests
 	c.requests++
 
 	// create lookup frame
 	lookup := &frame.Lookup{
 		Topic:         topic,
-		RID:           c.requests,
+		RID:           rid,
 		Authoritative: authoritative,
 	}
 
@@ -139,13 +140,15 @@ func (c *Client) CreateProducer(name, topic string) (uint64, int64, error) {
 	defer c.mutex.Unlock()
 
 	// increment counters
+	rid := c.requests
+	pid := c.producers
 	c.requests++
 	c.producers++
 
 	// create producer frame
 	producer := &frame.Producer{
-		RID:   c.requests,
-		ID:    c.producers,
+		RID:   rid,
+		ID:    pid,
 		Name:  name,
 		Topic: topic,
 	}
@@ -174,7 +177,7 @@ func (c *Client) CreateProducer(name, topic string) (uint64, int64, error) {
 	}
 
 	// check request id
-	if producerSuccess.RID != c.requests {
+	if producerSuccess.RID != rid {
 		return 0, 0, fmt.Errorf("not matching request ids")
 	}
 
@@ -183,7 +186,47 @@ func (c *Client) CreateProducer(name, topic string) (uint64, int64, error) {
 		return 0, 0, fmt.Errorf("not matching producer names")
 	}
 
-	return c.producers, producerSuccess.LastSequence, nil
+	// get last sequence
+	lastSeq := producerSuccess.LastSequence
+
+	return pid, lastSeq, nil
+}
+
+func (c *Client) Send(pid, seq uint64, msg []byte) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	// create send frame
+	producer := &frame.Send{
+		PID:      pid,
+		Sequence: seq,
+		Message:  msg,
+	}
+
+	// send frame
+	err := c.conn.Send(producer)
+	if err != nil {
+		return err
+	}
+
+	// await response
+	in, err := c.conn.Receive()
+	if err != nil {
+		return err
+	}
+
+	// check for error frame
+	if _error, ok := in.(*frame.Error); ok {
+		return fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message)
+	}
+
+	// get send receipt frame
+	_, ok := in.(*frame.SendReceipt)
+	if !ok {
+		return fmt.Errorf("expected to receive a send receipt frame")
+	}
+
+	return nil
 }
 
 func (c *Client) CloseProducer(id uint64) error {
@@ -191,11 +234,12 @@ func (c *Client) CloseProducer(id uint64) error {
 	defer c.mutex.Unlock()
 
 	// increment counters
+	rid := c.requests
 	c.requests++
 
 	// create producer frame
 	producer := &frame.CloseProducer{
-		RID: c.requests,
+		RID: rid,
 		ID:  id,
 	}
 
@@ -223,7 +267,7 @@ func (c *Client) CloseProducer(id uint64) error {
 	}
 
 	// check request id
-	if success.RID != c.requests {
+	if success.RID != rid {
 		return fmt.Errorf("not matching request ids")
 	}
 

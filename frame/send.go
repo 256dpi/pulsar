@@ -1,44 +1,69 @@
 package frame
 
-import "github.com/256dpi/pulsar/pb"
+import (
+	"time"
+
+	"github.com/256dpi/pulsar/pb"
+	"github.com/golang/protobuf/proto"
+)
 
 type Send struct {
-	ProducerID uint64
-	SequenceID uint64
+	ProducerName string
+	PID          uint64
+	Sequence     uint64
+	Message      []byte
 }
 
 func (r *Send) Encode() (*pb.BaseCommand, *pb.MessageMetadata, []byte, error) {
-	return nil, nil, nil, nil
+	// prepare send command
+	send := &pb.CommandSend{
+		ProducerId:  proto.Uint64(r.PID),
+		SequenceId:  proto.Uint64(r.Sequence),
+		NumMessages: proto.Int32(1),
+	}
+
+	// prepare base command
+	base := &pb.BaseCommand{
+		Type: getType(pb.BaseCommand_SEND),
+		Send: send,
+	}
+
+	// prepare metadata
+	metadata := &pb.MessageMetadata{
+		ProducerName: proto.String(r.ProducerName),
+		SequenceId:   proto.Uint64(r.Sequence),
+		PublishTime:  proto.Uint64(uint64(time.Now().Unix())),
+	}
+
+	return base, metadata, r.Message, nil
 }
 
-// TODO: Add batch.
-
 type SendReceipt struct {
-	ProducerID uint64
-	SequenceID uint64
-	MessageID  MessageID
+	PID       uint64
+	Sequence  uint64
+	MessageID MessageID
 }
 
 func (r *SendReceipt) Decode(bc *pb.BaseCommand) error {
 	// set fields
-	r.ProducerID = bc.SendReceipt.GetProducerId()
-	r.SequenceID = bc.SendReceipt.GetSequenceId()
+	r.PID = bc.SendReceipt.GetProducerId()
+	r.Sequence = bc.SendReceipt.GetSequenceId()
 	r.MessageID = convertMessageId(bc.SendReceipt.MessageId)
 
 	return nil
 }
 
 type SendError struct {
-	ProducerID uint64
-	SequenceID uint64
-	Error      string
-	Message    string
+	PID      uint64
+	Sequence uint64
+	Error    string
+	Message  string
 }
 
 func (r *SendError) Decode(bc *pb.BaseCommand) error {
 	// set fields
-	r.ProducerID = bc.SendError.GetProducerId()
-	r.SequenceID = bc.SendError.GetSequenceId()
+	r.PID = bc.SendError.GetProducerId()
+	r.Sequence = bc.SendError.GetSequenceId()
 	r.Error = pb.ServerError_name[int32(bc.SendError.GetError())]
 	r.Message = bc.SendError.GetMessage()
 

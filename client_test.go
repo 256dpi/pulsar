@@ -62,8 +62,16 @@ func TestCreateProducer(t *testing.T) {
 
 	id, lastSeq, err := client.CreateProducer("test", "test")
 	assert.NoError(t, err)
-	assert.Equal(t, uint64(1), id)
+	assert.Equal(t, uint64(0), id)
 	assert.Equal(t, int64(-1), lastSeq)
+
+	var seq uint64 = 0
+	if lastSeq > 0 {
+		seq = uint64(lastSeq + 1)
+	}
+
+	err = client.Send(id, seq, []byte("hello"))
+	assert.NoError(t, err)
 
 	err = client.CloseProducer(id)
 	assert.NoError(t, err)
