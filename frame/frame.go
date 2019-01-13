@@ -116,6 +116,8 @@ func Decode(data []byte) (interface{}, error) {
 		// get checksum
 		// checksum := data[commandSize+4+2:commandSize+4+2+4]
 
+		// TODO: Check checksum.
+
 		// get metadata size
 		metadataSize := int(binary.BigEndian.Uint32(data[commandSize+4+2+4 : commandSize+4+2+4+4]))
 
@@ -295,8 +297,6 @@ func Encode(frame interface{}) ([]byte, error) {
 
 		// write command
 		copy(data[4+4:], baseBytes)
-
-		/* [totalSize][commandSize][message][magicNumber][checksum][metadataSize][metadata][payload] */
 
 		// write magic number
 		copy(data[4+4+commandSize:], magicByte)

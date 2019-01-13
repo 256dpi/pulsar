@@ -9,9 +9,9 @@ import (
 )
 
 type Send struct {
-	ProducerName string
 	PID          uint64
 	Sequence     uint64
+	ProducerName string
 	Message      []byte
 }
 

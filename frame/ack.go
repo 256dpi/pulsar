@@ -36,5 +36,3 @@ func (a *Ack) Encode() (*pb.BaseCommand, error) {
 
 	return base, nil
 }
-
-// TODO: Add Validation error.
