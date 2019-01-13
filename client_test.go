@@ -146,6 +146,7 @@ func TestConsumerAndProducer(t *testing.T) {
 	safeWait(done1)
 
 	var cid uint64
+	var mid frame.MessageID
 	done2 := make(chan struct{})
 	done4 := make(chan struct{})
 	err = client.CreateConsumer("test", "test", "test", frame.Exclusive, false, func(id uint64, err error) {
@@ -158,6 +159,7 @@ func TestConsumerAndProducer(t *testing.T) {
 	}, func(msg *frame.Message, err error) {
 		assert.NoError(t, err)
 
+		mid = msg.MessageID
 		close(done4)
 	})
 	assert.NoError(t, err)
@@ -177,6 +179,9 @@ func TestConsumerAndProducer(t *testing.T) {
 
 	safeWait(done3)
 	safeWait(done4)
+
+	err = client.Ack(cid, frame.Cumulative, mid)
+	assert.NoError(t, err)
 
 	done5 := make(chan struct{})
 	err = client.CloseConsumer(cid, func(err error) {

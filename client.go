@@ -417,6 +417,26 @@ func (c *Client) Flow(cid uint64, num uint32) error {
 	return nil
 }
 
+func (c *Client) Ack(cid uint64, typ frame.AckType, mid frame.MessageID) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	// create ack frame
+	ack := &frame.Ack{
+		CID:        cid,
+		AckType:    typ,
+		MessagedID: mid,
+	}
+
+	// send frame
+	err := c.send(ack)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Client) CloseConsumer(cid uint64, rcb func(error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()

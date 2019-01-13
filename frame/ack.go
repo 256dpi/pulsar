@@ -9,12 +9,12 @@ import (
 type AckType int
 
 const (
-	Individual = pb.CommandAck_Individual
-	Cumulative = pb.CommandAck_Cumulative
+	Individual = AckType(pb.CommandAck_Individual)
+	Cumulative = AckType(pb.CommandAck_Cumulative)
 )
 
 type Ack struct {
-	ConsumerID uint64
+	CID        uint64
 	AckType    AckType
 	MessagedID MessageID
 }
@@ -29,7 +29,7 @@ func (a *Ack) Encode() (*pb.BaseCommand, error) {
 
 	// prepare ack command
 	ack := &pb.CommandAck{}
-	ack.ConsumerId = proto.Uint64(a.ConsumerID)
+	ack.ConsumerId = proto.Uint64(a.CID)
 	ack.AckType = &ackType
 
 	// prepare base command
