@@ -96,3 +96,14 @@ func TestCreateConsumer(t *testing.T) {
 	err = client.Close()
 	assert.NoError(t, err)
 }
+
+func TestPing(t *testing.T) {
+	client, err := Connect(ClientConfig{})
+	assert.NoError(t, err)
+
+	err = client.Ping()
+	assert.NoError(t, err)
+
+	err = client.Close()
+	assert.NoError(t, err)
+}

@@ -373,6 +373,36 @@ func (c *Client) CloseConsumer(id uint64) error {
 	return nil
 }
 
+func (c *Client) Ping() error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	// send ping frame
+	err := c.conn.Send(&frame.Ping{})
+	if err != nil {
+		return err
+	}
+
+	// await response
+	in, err := c.conn.Receive()
+	if err != nil {
+		return err
+	}
+
+	// check for error frame
+	if _error, ok := in.(*frame.Error); ok {
+		return fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message)
+	}
+
+	// get success frame
+	_, ok := in.(*frame.Pong)
+	if !ok {
+		return fmt.Errorf("expected to receive a pong frame")
+	}
+
+	return nil
+}
+
 func (c *Client) Close() error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
