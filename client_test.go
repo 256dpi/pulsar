@@ -21,12 +21,14 @@ func TestLookup(t *testing.T) {
 	assert.NoError(t, err)
 
 	done := make(chan struct{})
-	err = client.Lookup("test", false, func(res *LookupResponse, err error) {
+	err = client.Lookup("test", false, func(res *frame.LookupResponse, err error) {
 		assert.NoError(t, err)
-		assert.Equal(t, &LookupResponse{
-			URL:           "pulsar://Odin.local:6650",
-			Authoritative: true,
-			Proxy:         true,
+		assert.Equal(t, &frame.LookupResponse{
+			BrokerServiceURL:       "pulsar://Odin.local:6650",
+			Response:               frame.LookupTypeConnect,
+			Authoritative:          true,
+			ProxyThroughServiceURL: true,
+			Error:                  "UnknownError",
 		}, res)
 
 		close(done)
@@ -100,7 +102,7 @@ func TestCreateConsumer(t *testing.T) {
 		cid = id
 
 		close(done1)
-	})
+	}, nil)
 	assert.NoError(t, err)
 
 	safeWait(done1)
