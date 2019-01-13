@@ -2,7 +2,6 @@ package pulsar
 
 import (
 	"bufio"
-	"encoding/binary"
 	"io"
 	"net"
 	"net/url"
@@ -62,14 +61,8 @@ func (c *IOConn) Send(f frame.Frame) error {
 	c.sMutex.Lock()
 	defer c.sMutex.Unlock()
 
-	// encode frame
-	data, err := frame.Encode(f)
-	if err != nil {
-		return err
-	}
-
-	// write buffer
-	_, err = c.writer.Write(data)
+	// write frame
+	err := frame.Write(f, c.writer)
 	if err != nil {
 		return err
 	}
@@ -81,43 +74,13 @@ func (c *IOConn) Receive() (frame.Frame, error) {
 	c.rMutex.Lock()
 	defer c.rMutex.Unlock()
 
-	// read total size
-	totalSizeBytes, err := c.readSlice(4)
-	if err != nil {
-		return nil, err
-	}
-
-	// get total size
-	totalSize := int(binary.BigEndian.Uint32(totalSizeBytes))
-
-	// read complete frame
-	frameBytes, err := c.readSlice(totalSize)
-	if err != nil {
-		return nil, err
-	}
-
-	// decode frame
-	f, err := frame.Decode(frameBytes)
+	// read next frame
+	f, err := frame.Read(c.reader)
 	if err != nil {
 		return nil, err
 	}
 
 	return f, nil
-}
-
-func (c *IOConn) readSlice(len int) ([]byte, error) {
-	// TODO: Reuse some kind of buffer?
-
-	// prepare slice
-	slice := make([]byte, len)
-
-	// read bytes
-	_, err := io.ReadFull(c.reader, slice)
-	if err != nil {
-		return nil, err
-	}
-
-	return slice, nil
 }
 
 func (c *IOConn) Close() error {

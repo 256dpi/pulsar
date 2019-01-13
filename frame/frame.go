@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"hash/crc32"
+	"io"
 
 	"github.com/256dpi/pulsar/pb"
 )
@@ -29,6 +30,49 @@ type PayloadCommandDecoder interface {
 
 type PayloadCommandEncoder interface {
 	Encode() (*pb.BaseCommand, *pb.MessageMetadata, []byte, error)
+}
+
+func Read(reader io.Reader) (Frame, error) {
+	// read total size
+	totalSizeBytes := make([]byte, 4)
+	_, err := io.ReadFull(reader, totalSizeBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	// get total size
+	totalSize := int(binary.BigEndian.Uint32(totalSizeBytes))
+
+	// read complete frame
+	frameBytes := make([]byte, totalSize)
+	_, err = io.ReadFull(reader, frameBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	// decode frame
+	f, err := Decode(frameBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
+func Write(frame Frame, writer io.Writer) error {
+	// encode frame
+	data, err := Encode(frame)
+	if err != nil {
+		return err
+	}
+
+	// write buffer
+	_, err = writer.Write(data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func Decode(data []byte) (interface{}, error) {
