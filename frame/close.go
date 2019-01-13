@@ -11,13 +11,13 @@ type CloseProducer struct {
 	RID uint64
 }
 
-func (c *CloseProducer) Encode() (*pb.BaseCommand, error) {
+func (p *CloseProducer) Encode() (*pb.BaseCommand, error) {
 	// prepare close producer command
 	closeProducer := &pb.CommandCloseProducer{}
 
 	// set fields
-	closeProducer.ProducerId = proto.Uint64(c.PID)
-	closeProducer.RequestId = proto.Uint64(c.RID)
+	closeProducer.ProducerId = proto.Uint64(p.PID)
+	closeProducer.RequestId = proto.Uint64(p.RID)
 
 	// prepare base command
 	base := &pb.BaseCommand{
@@ -26,6 +26,14 @@ func (c *CloseProducer) Encode() (*pb.BaseCommand, error) {
 	}
 
 	return base, nil
+}
+
+func (p *CloseProducer) Decode(bc *pb.BaseCommand) error {
+	// set fields
+	p.PID = bc.CloseProducer.GetProducerId()
+	p.RID = bc.CloseProducer.GetRequestId()
+
+	return nil
 }
 
 type CloseConsumer struct {
@@ -48,6 +56,14 @@ func (c *CloseConsumer) Encode() (*pb.BaseCommand, error) {
 	}
 
 	return base, nil
+}
+
+func (c *CloseConsumer) Decode(bc *pb.BaseCommand) error {
+	// set fields
+	c.CID = bc.CloseConsumer.GetConsumerId()
+	c.RID = bc.CloseConsumer.GetRequestId()
+
+	return nil
 }
 
 type Success struct {

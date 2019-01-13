@@ -92,12 +92,16 @@ func Decode(data []byte) (interface{}, error) {
 	// set command
 	switch base.GetType() {
 	case pb.BaseCommand_CONNECT:
+		// not supported
 	case pb.BaseCommand_CONNECTED:
 		connected := &Connected{}
 		return connected, connected.Decode(base)
 	case pb.BaseCommand_SUBSCRIBE:
+		// not supported
 	case pb.BaseCommand_PRODUCER:
+		// not supported
 	case pb.BaseCommand_SEND:
+		// not supported
 	case pb.BaseCommand_SEND_RECEIPT:
 		sendReceipt := &SendReceipt{}
 		return sendReceipt, sendReceipt.Decode(base)
@@ -108,8 +112,11 @@ func Decode(data []byte) (interface{}, error) {
 		message := &Message{}
 		return message, message.Decode(base, metadata, payload)
 	case pb.BaseCommand_ACK:
+		// not supported
 	case pb.BaseCommand_FLOW:
+		// not supported
 	case pb.BaseCommand_UNSUBSCRIBE:
+		// not supported
 	case pb.BaseCommand_SUCCESS:
 		success := &Success{}
 		return success, success.Decode(base)
@@ -117,8 +124,11 @@ func Decode(data []byte) (interface{}, error) {
 		_error := &Error{}
 		return _error, _error.Decode(base)
 	case pb.BaseCommand_CLOSE_PRODUCER:
-		// TODO: Add support.
+		closeProducer := &CloseProducer{}
+		return closeProducer, closeProducer.Decode(base)
 	case pb.BaseCommand_CLOSE_CONSUMER:
+		closeConsumer := &CloseConsumer{}
+		return closeConsumer, closeConsumer.Decode(base)
 	case pb.BaseCommand_PRODUCER_SUCCESS:
 		producerSuccess := &ProducerSuccess{}
 		return producerSuccess, producerSuccess.Decode(base)
@@ -129,23 +139,38 @@ func Decode(data []byte) (interface{}, error) {
 		pong := &Pong{}
 		return pong, pong.Decode(base)
 	case pb.BaseCommand_REDELIVER_UNACKNOWLEDGED_MESSAGES:
+		// not supported
 	case pb.BaseCommand_PARTITIONED_METADATA:
+		// not supported
 	case pb.BaseCommand_PARTITIONED_METADATA_RESPONSE:
+		// TODO: Add support.
 	case pb.BaseCommand_LOOKUP:
+		// not supported
 	case pb.BaseCommand_LOOKUP_RESPONSE:
 		lookupResponse := &LookupResponse{}
 		return lookupResponse, lookupResponse.Decode(base)
 	case pb.BaseCommand_CONSUMER_STATS:
+		// not supported
 	case pb.BaseCommand_CONSUMER_STATS_RESPONSE:
+		// TODO: Add support.
 	case pb.BaseCommand_REACHED_END_OF_TOPIC:
+		// TODO: Add support.
 	case pb.BaseCommand_SEEK:
+		// not supported
 	case pb.BaseCommand_GET_LAST_MESSAGE_ID:
+		// not supported
 	case pb.BaseCommand_GET_LAST_MESSAGE_ID_RESPONSE:
+		// TODO: Add support.
 	case pb.BaseCommand_ACTIVE_CONSUMER_CHANGE:
+		// TODO: Add support.
 	case pb.BaseCommand_GET_TOPICS_OF_NAMESPACE:
+		// not supported
 	case pb.BaseCommand_GET_TOPICS_OF_NAMESPACE_RESPONSE:
+		// TODO: Add support.
 	case pb.BaseCommand_GET_SCHEMA:
+		// not supported
 	case pb.BaseCommand_GET_SCHEMA_RESPONSE:
+		// TODO: Add support.
 	}
 
 	return nil, fmt.Errorf("unsupported command type %d", base.GetType())
