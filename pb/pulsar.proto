@@ -22,7 +22,7 @@ package pulsar.proto;
 option java_package = "org.apache.pulsar.common.api.proto";
 option optimize_for = LITE_RUNTIME;
 
-option go_package = "pp";
+option go_package = "pb";
 message Schema {
   enum Type {
     None = 0;
