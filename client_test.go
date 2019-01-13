@@ -120,3 +120,84 @@ func TestCreateConsumer(t *testing.T) {
 	err = client.Close()
 	assert.NoError(t, err)
 }
+
+func TestConsumerAndProducer(t *testing.T) {
+	client, err := Connect(ClientConfig{})
+	assert.NoError(t, err)
+
+	var pid uint64 = 0
+	var seq uint64 = 0
+
+	done1 := make(chan struct{})
+	err = client.CreateProducer("test", "test", func(id uint64, lastSeq int64, err error) {
+		assert.NoError(t, err)
+		assert.Equal(t, uint64(0), id)
+		assert.Equal(t, int64(-1), lastSeq)
+
+		pid = id
+		if lastSeq > 0 {
+			seq = uint64(lastSeq + 1)
+		}
+
+		close(done1)
+	})
+	assert.NoError(t, err)
+
+	safeWait(done1)
+
+	var cid uint64
+	done2 := make(chan struct{})
+	done4 := make(chan struct{})
+	err = client.CreateConsumer("test", "test", "test", frame.Exclusive, false, func(id uint64, err error) {
+		assert.NoError(t, err)
+		assert.Equal(t, uint64(0), cid)
+
+		cid = id
+
+		close(done2)
+	}, func(msg *frame.Message, err error) {
+		assert.NoError(t, err)
+
+		close(done4)
+	})
+	assert.NoError(t, err)
+
+	err = client.Flow(cid, 10)
+	assert.NoError(t, err)
+
+	safeWait(done2)
+
+	done3 := make(chan struct{})
+	err = client.Send(pid, seq, []byte("hello"), func(e error) {
+		assert.NoError(t, err)
+
+		close(done3)
+	})
+	assert.NoError(t, err)
+
+	safeWait(done3)
+	safeWait(done4)
+
+	done5 := make(chan struct{})
+	err = client.CloseConsumer(cid, func(err error) {
+		assert.NoError(t, err)
+
+		close(done5)
+	})
+	assert.NoError(t, err)
+
+	safeWait(done5)
+
+	done6 := make(chan struct{})
+	err = client.CloseProducer(pid, func(e error) {
+		assert.NoError(t, err)
+
+		close(done6)
+	})
+	assert.NoError(t, err)
+
+	safeWait(done6)
+
+	err = client.Close()
+	assert.NoError(t, err)
+}

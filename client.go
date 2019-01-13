@@ -144,7 +144,7 @@ func (c *Client) Lookup(topic string, authoritative bool, rcb func(*frame.Lookup
 	}
 
 	// send lookup frame
-	err := c.conn.Send(lookup)
+	err := c.send(lookup)
 	if err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func (c *Client) CreateProducer(name, topic string, rcb func(uint64, int64, erro
 	}
 
 	// send frame
-	err := c.conn.Send(producer)
+	err := c.send(producer)
 	if err != nil {
 		return err
 	}
@@ -257,7 +257,7 @@ func (c *Client) Send(pid, seq uint64, msg []byte, scb func(error)) error {
 	}
 
 	// send frame
-	err := c.conn.Send(producer)
+	err := c.send(producer)
 	if err != nil {
 		return err
 	}
@@ -310,7 +310,7 @@ func (c *Client) CloseProducer(pid uint64, rcb func(error)) error {
 	}
 
 	// send frame
-	err := c.conn.Send(producer)
+	err := c.send(producer)
 	if err != nil {
 		return err
 	}
@@ -390,7 +390,26 @@ func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionT
 	}
 
 	// send frame
-	err := c.conn.Send(subscribe)
+	err := c.send(subscribe)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) Flow(cid uint64, num uint32) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	// create flow frame
+	flow := &frame.Flow{
+		CID:            cid,
+		MessagePermits: num,
+	}
+
+	// send frame
+	err := c.send(flow)
 	if err != nil {
 		return err
 	}
@@ -443,7 +462,7 @@ func (c *Client) CloseConsumer(cid uint64, rcb func(error)) error {
 	}
 
 	// send frame
-	err := c.conn.Send(consumer)
+	err := c.send(consumer)
 	if err != nil {
 		return err
 	}
@@ -464,6 +483,17 @@ func (c *Client) Close() error {
 	return nil
 }
 
+func (c *Client) send(f frame.Frame) error {
+	pretty.Println("send", f)
+
+	err := c.conn.Send(f)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Client) receiver() {
 	// TODO: Cancel all callbacks on error.
 
@@ -475,6 +505,8 @@ func (c *Client) receiver() {
 			return
 		}
 
+		pretty.Println("received", f)
+
 		// handle frame
 		err = c.handleFrame(f)
 		if err != nil {
@@ -485,8 +517,6 @@ func (c *Client) receiver() {
 }
 
 func (c *Client) handleFrame(f frame.Frame) error {
-	pretty.Println(f)
-
 	// handle frame
 	switch f.Type() {
 	case frame.CONNECT:
@@ -645,7 +675,7 @@ func (c *Client) handlePing() error {
 	defer c.mutex.Unlock()
 
 	// send pong
-	err := c.conn.Send(&frame.Pong{})
+	err := c.send(&frame.Pong{})
 	if err != nil {
 		return err
 	}
