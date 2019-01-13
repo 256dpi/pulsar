@@ -47,7 +47,6 @@ func TestCreateProducer(t *testing.T) {
 
 	var pid uint64 = 0
 	var seq uint64 = 0
-
 	done1 := make(chan struct{})
 	err = client.CreateProducer("test", "test", func(id uint64, lastSeq int64, err error) {
 		assert.NoError(t, err)

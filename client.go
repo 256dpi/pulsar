@@ -6,8 +6,6 @@ import (
 	"sync"
 
 	"github.com/256dpi/pulsar/frame"
-
-	"github.com/kr/pretty"
 )
 
 var ErrRedirect = errors.New("redirect")
@@ -504,8 +502,6 @@ func (c *Client) Close() error {
 }
 
 func (c *Client) send(f frame.Frame) error {
-	pretty.Println("send", f)
-
 	err := c.conn.Send(f)
 	if err != nil {
 		return err
@@ -524,8 +520,6 @@ func (c *Client) receiver() {
 			// TODO: Handle error.
 			return
 		}
-
-		pretty.Println("received", f)
 
 		// handle frame
 		err = c.handleFrame(f)
