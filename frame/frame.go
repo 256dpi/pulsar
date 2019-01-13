@@ -112,6 +112,7 @@ func Decode(data []byte) (interface{}, error) {
 		_error := &Error{}
 		return _error, _error.Decode(base)
 	case pb.BaseCommand_CLOSE_PRODUCER:
+		// TODO: Add support.
 	case pb.BaseCommand_CLOSE_CONSUMER:
 	case pb.BaseCommand_PRODUCER_SUCCESS:
 		producerSuccess := &ProducerSuccess{}
@@ -127,6 +128,8 @@ func Decode(data []byte) (interface{}, error) {
 	case pb.BaseCommand_PARTITIONED_METADATA_RESPONSE:
 	case pb.BaseCommand_LOOKUP:
 	case pb.BaseCommand_LOOKUP_RESPONSE:
+		lookupResponse := &LookupResponse{}
+		return lookupResponse, lookupResponse.Decode(base)
 	case pb.BaseCommand_CONSUMER_STATS:
 	case pb.BaseCommand_CONSUMER_STATS_RESPONSE:
 	case pb.BaseCommand_REACHED_END_OF_TOPIC:

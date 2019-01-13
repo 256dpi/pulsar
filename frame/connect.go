@@ -12,6 +12,7 @@ var protocolVersion = int32(pb.ProtocolVersion_v13)
 
 type Connect struct {
 	ClientVersion string
+	ProxyURL      string
 }
 
 func (c *Connect) Encode() (*pb.BaseCommand, error) {
@@ -20,6 +21,7 @@ func (c *Connect) Encode() (*pb.BaseCommand, error) {
 	connect.ClientVersion = proto.String(c.ClientVersion)
 	connect.AuthMethod = &authMethodNone
 	connect.ProtocolVersion = &protocolVersion
+	connect.ProxyToBrokerUrl = proto.String(c.ProxyURL)
 
 	// prepare base command
 	base := &pb.BaseCommand{
