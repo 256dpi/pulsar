@@ -27,16 +27,20 @@ type Subscribe struct {
 	Name            string
 	Topic           string
 	Subscription    string
-	Type            SubscriptionType
+	SubType         SubscriptionType
 	PriorityLevel   int32
 	Durable         bool
 	StartMessageID  *MessageID
 	InitialPosition InitialPosition
 }
 
+func (s *Subscribe) Type() Type {
+	return SUBSCRIBE
+}
+
 func (s *Subscribe) Encode() (*pb.BaseCommand, error) {
 	// prepare sub type
-	subType := pb.CommandSubscribe_SubType(int32(s.Type))
+	subType := pb.CommandSubscribe_SubType(int32(s.SubType))
 	inPos := pb.CommandSubscribe_InitialPosition(int32(s.InitialPosition))
 
 	// prepare subscribe command

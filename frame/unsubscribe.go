@@ -11,11 +11,15 @@ type Unsubscribe struct {
 	CID uint64
 }
 
-func (s *Unsubscribe) Encode() (*pb.BaseCommand, error) {
+func (u *Unsubscribe) Type() Type {
+	return UNSUBSCRIBE
+}
+
+func (u *Unsubscribe) Encode() (*pb.BaseCommand, error) {
 	// prepare unsubscribe command
 	unsubscribe := &pb.CommandUnsubscribe{
-		RequestId:  proto.Uint64(s.RID),
-		ConsumerId: proto.Uint64(s.CID),
+		RequestId:  proto.Uint64(u.RID),
+		ConsumerId: proto.Uint64(u.CID),
 	}
 
 	// prepare base command

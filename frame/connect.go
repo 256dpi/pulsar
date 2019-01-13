@@ -16,6 +16,10 @@ type Connect struct {
 	ProxyURL      string
 }
 
+func (c *Connect) Type() Type {
+	return CONNECT
+}
+
 func (c *Connect) Encode() (*pb.BaseCommand, error) {
 	// prepare connect command
 	connect := &pb.CommandConnect{}
@@ -41,6 +45,10 @@ func (c *Connect) Encode() (*pb.BaseCommand, error) {
 
 type Connected struct {
 	ServerVersion string
+}
+
+func (c *Connected) Type() Type {
+	return CONNECTED
 }
 
 func (c *Connected) Decode(bc *pb.BaseCommand) error {

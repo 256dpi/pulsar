@@ -8,6 +8,10 @@ type Error struct {
 	Message string
 }
 
+func (e *Error) Type() Type {
+	return ERROR
+}
+
 func (e *Error) Decode(bc *pb.BaseCommand) error {
 	// set fields
 	e.RID = bc.Error.GetRequestId()

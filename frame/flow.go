@@ -11,6 +11,10 @@ type Flow struct {
 	MessagePermits uint32
 }
 
+func (f *Flow) Type() Type {
+	return FLOW
+}
+
 func (f *Flow) Encode() (*pb.BaseCommand, error) {
 	// prepare flow command
 	flow := &pb.CommandFlow{

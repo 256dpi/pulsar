@@ -12,6 +12,10 @@ type Lookup struct {
 	Authoritative bool
 }
 
+func (l *Lookup) Type() Type {
+	return LOOKUP
+}
+
 func (l *Lookup) Encode() (*pb.BaseCommand, error) {
 	// prepare lookup command
 	lookup := &pb.CommandLookupTopic{}
@@ -45,6 +49,10 @@ type LookupResponse struct {
 	Error                  string
 	Message                string
 	ProxyThroughServiceURL bool
+}
+
+func (r *LookupResponse) Type() Type {
+	return LOOKUP_RESPONSE
 }
 
 func (r *LookupResponse) Decode(bc *pb.BaseCommand) error {

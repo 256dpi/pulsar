@@ -291,7 +291,7 @@ func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionT
 		Name:         name,
 		Topic:        topic,
 		Subscription: sub,
-		Type:         typ,
+		SubType:      typ,
 		Durable:      durable,
 		//StartMessageID
 		//InitialPosition

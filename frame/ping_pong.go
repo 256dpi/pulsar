@@ -4,6 +4,10 @@ import "github.com/256dpi/pulsar/pb"
 
 type Ping struct{}
 
+func (p *Ping) Type() Type {
+	return PING
+}
+
 func (p *Ping) Decode(bc *pb.BaseCommand) error {
 	return nil
 }
@@ -19,6 +23,10 @@ func (p *Ping) Encode() (*pb.BaseCommand, error) {
 }
 
 type Pong struct{}
+
+func (p *Pong) Type() Type {
+	return PONG
+}
 
 func (p *Pong) Decode(bc *pb.BaseCommand) error {
 	return nil

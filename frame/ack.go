@@ -19,6 +19,10 @@ type Ack struct {
 	MessagedID MessageID
 }
 
+func (a *Ack) Type() Type {
+	return ACK
+}
+
 func (a *Ack) Encode() (*pb.BaseCommand, error) {
 	// prepare ack type
 	ackType := pb.CommandAck_AckType(a.AckType)

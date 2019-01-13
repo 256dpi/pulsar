@@ -11,6 +11,10 @@ type CloseProducer struct {
 	RID uint64
 }
 
+func (p *CloseProducer) Type() Type {
+	return CLOSE_PRODUCER
+}
+
 func (p *CloseProducer) Encode() (*pb.BaseCommand, error) {
 	// prepare close producer command
 	closeProducer := &pb.CommandCloseProducer{}
@@ -41,6 +45,10 @@ type CloseConsumer struct {
 	RID uint64
 }
 
+func (c *CloseConsumer) Type() Type {
+	return CLOSE_CONSUMER
+}
+
 func (c *CloseConsumer) Encode() (*pb.BaseCommand, error) {
 	// prepare close consumer command
 	closeConsumer := &pb.CommandCloseConsumer{}
@@ -62,17 +70,6 @@ func (c *CloseConsumer) Decode(bc *pb.BaseCommand) error {
 	// set fields
 	c.CID = bc.CloseConsumer.GetConsumerId()
 	c.RID = bc.CloseConsumer.GetRequestId()
-
-	return nil
-}
-
-type Success struct {
-	RID uint64
-}
-
-func (e *Success) Decode(bc *pb.BaseCommand) error {
-	// set fields
-	e.RID = bc.Success.GetRequestId()
 
 	return nil
 }

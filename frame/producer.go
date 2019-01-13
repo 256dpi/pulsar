@@ -13,6 +13,10 @@ type Producer struct {
 	Topic string
 }
 
+func (p *Producer) Type() Type {
+	return PRODUCER
+}
+
 func (p *Producer) Encode() (*pb.BaseCommand, error) {
 	// prepare producer command
 	producer := &pb.CommandProducer{}
@@ -37,6 +41,10 @@ type ProducerSuccess struct {
 	RID          uint64
 	Name         string
 	LastSequence int64
+}
+
+func (s *ProducerSuccess) Type() Type {
+	return PRODUCER_SUCCESS
 }
 
 func (s *ProducerSuccess) Decode(bc *pb.BaseCommand) error {

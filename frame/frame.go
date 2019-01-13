@@ -14,7 +14,48 @@ var magicByte = []byte{0x0e, 0x01}
 
 var crcTable = crc32.MakeTable(crc32.Castagnoli)
 
-type Frame interface{}
+type Type int
+
+const (
+	CONNECT                           = Type(pb.BaseCommand_CONNECT)
+	CONNECTED                         = Type(pb.BaseCommand_CONNECTED)
+	SUBSCRIBE                         = Type(pb.BaseCommand_SUBSCRIBE)
+	PRODUCER                          = Type(pb.BaseCommand_PRODUCER)
+	SEND                              = Type(pb.BaseCommand_SEND)
+	SEND_RECEIPT                      = Type(pb.BaseCommand_SEND_RECEIPT)
+	SEND_ERROR                        = Type(pb.BaseCommand_SEND_ERROR)
+	MESSAGE                           = Type(pb.BaseCommand_MESSAGE)
+	ACK                               = Type(pb.BaseCommand_ACK)
+	FLOW                              = Type(pb.BaseCommand_FLOW)
+	UNSUBSCRIBE                       = Type(pb.BaseCommand_UNSUBSCRIBE)
+	SUCCESS                           = Type(pb.BaseCommand_SUCCESS)
+	ERROR                             = Type(pb.BaseCommand_ERROR)
+	CLOSE_PRODUCER                    = Type(pb.BaseCommand_CLOSE_PRODUCER)
+	CLOSE_CONSUMER                    = Type(pb.BaseCommand_CLOSE_CONSUMER)
+	PRODUCER_SUCCESS                  = Type(pb.BaseCommand_PRODUCER_SUCCESS)
+	PING                              = Type(pb.BaseCommand_PING)
+	PONG                              = Type(pb.BaseCommand_PONG)
+	REDELIVER_UNACKNOWLEDGED_MESSAGES = Type(pb.BaseCommand_REDELIVER_UNACKNOWLEDGED_MESSAGES)
+	PARTITIONED_METADATA              = Type(pb.BaseCommand_PARTITIONED_METADATA)
+	PARTITIONED_METADATA_RESPONSE     = Type(pb.BaseCommand_PARTITIONED_METADATA_RESPONSE)
+	LOOKUP                            = Type(pb.BaseCommand_LOOKUP)
+	LOOKUP_RESPONSE                   = Type(pb.BaseCommand_LOOKUP_RESPONSE)
+	CONSUMER_STATS                    = Type(pb.BaseCommand_CONSUMER_STATS)
+	CONSUMER_STATS_RESPONSE           = Type(pb.BaseCommand_CONSUMER_STATS_RESPONSE)
+	REACHED_END_OF_TOPIC              = Type(pb.BaseCommand_REACHED_END_OF_TOPIC)
+	SEEK                              = Type(pb.BaseCommand_SEEK)
+	GET_LAST_MESSAGE_ID               = Type(pb.BaseCommand_GET_LAST_MESSAGE_ID)
+	GET_LAST_MESSAGE_ID_RESPONSE      = Type(pb.BaseCommand_GET_LAST_MESSAGE_ID_RESPONSE)
+	ACTIVE_CONSUMER_CHANGE            = Type(pb.BaseCommand_ACTIVE_CONSUMER_CHANGE)
+	GET_TOPICS_OF_NAMESPACE           = Type(pb.BaseCommand_GET_TOPICS_OF_NAMESPACE)
+	GET_TOPICS_OF_NAMESPACE_RESPONSE  = Type(pb.BaseCommand_GET_TOPICS_OF_NAMESPACE_RESPONSE)
+	GET_SCHEMA                        = Type(pb.BaseCommand_GET_SCHEMA)
+	GET_SCHEMA_RESPONSE               = Type(pb.BaseCommand_GET_SCHEMA_RESPONSE)
+)
+
+type Frame interface {
+	Type() Type
+}
 
 type SimpleDecoder interface {
 	Decode(*pb.BaseCommand) error

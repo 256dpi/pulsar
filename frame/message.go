@@ -11,6 +11,10 @@ type Message struct {
 	Message         []byte
 }
 
+func (m *Message) Type() Type {
+	return MESSAGE
+}
+
 func (m *Message) Decode(bc *pb.BaseCommand, md *pb.MessageMetadata, payload []byte) error {
 	// set fields
 	m.CID = bc.Message.GetConsumerId()

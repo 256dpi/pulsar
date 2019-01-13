@@ -15,11 +15,15 @@ type Send struct {
 	Message      []byte
 }
 
-func (r *Send) Encode() (*pb.BaseCommand, *pb.MessageMetadata, []byte, error) {
+func (s *Send) Type() Type {
+	return SEND
+}
+
+func (s *Send) Encode() (*pb.BaseCommand, *pb.MessageMetadata, []byte, error) {
 	// prepare send command
 	send := &pb.CommandSend{
-		ProducerId:  proto.Uint64(r.PID),
-		SequenceId:  proto.Uint64(r.Sequence),
+		ProducerId:  proto.Uint64(s.PID),
+		SequenceId:  proto.Uint64(s.Sequence),
 		NumMessages: proto.Int32(1),
 	}
 
@@ -31,18 +35,22 @@ func (r *Send) Encode() (*pb.BaseCommand, *pb.MessageMetadata, []byte, error) {
 
 	// prepare metadata
 	metadata := &pb.MessageMetadata{
-		ProducerName: proto.String(r.ProducerName),
-		SequenceId:   proto.Uint64(r.Sequence),
+		ProducerName: proto.String(s.ProducerName),
+		SequenceId:   proto.Uint64(s.Sequence),
 		PublishTime:  proto.Uint64(uint64(time.Now().Unix())),
 	}
 
-	return base, metadata, r.Message, nil
+	return base, metadata, s.Message, nil
 }
 
 type SendReceipt struct {
 	PID       uint64
 	Sequence  uint64
 	MessageID MessageID
+}
+
+func (r *SendReceipt) Type() Type {
+	return SEND_RECEIPT
 }
 
 func (r *SendReceipt) Decode(bc *pb.BaseCommand) error {
@@ -61,12 +69,16 @@ type SendError struct {
 	Message  string
 }
 
-func (r *SendError) Decode(bc *pb.BaseCommand) error {
+func (e *SendError) Type() Type {
+	return SEND_ERROR
+}
+
+func (e *SendError) Decode(bc *pb.BaseCommand) error {
 	// set fields
-	r.PID = bc.SendError.GetProducerId()
-	r.Sequence = bc.SendError.GetSequenceId()
-	r.Error = pb.ServerError_name[int32(bc.SendError.GetError())]
-	r.Message = bc.SendError.GetMessage()
+	e.PID = bc.SendError.GetProducerId()
+	e.Sequence = bc.SendError.GetSequenceId()
+	e.Error = pb.ServerError_name[int32(bc.SendError.GetError())]
+	e.Message = bc.SendError.GetMessage()
 
 	return nil
 }
