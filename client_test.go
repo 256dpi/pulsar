@@ -17,44 +17,25 @@ func TestConnect(t *testing.T) {
 }
 
 func TestLookup(t *testing.T) {
-	/* first lookup */
-
-	client1, err := Connect(ClientConfig{})
+	client, err := Connect(ClientConfig{})
 	assert.NoError(t, err)
 
-	resp1, err := client1.Lookup("test", false)
-	assert.NoError(t, err)
-	assert.Equal(t, &LookupResponse{
-		URL:           "pulsar://Odin.local:6650",
-		Authoritative: true,
-		Proxy:         true,
-	}, resp1)
+	done := make(chan struct{})
+	err = client.Lookup("test", false, func(res *LookupResponse, err error) {
+		assert.NoError(t, err)
+		assert.Equal(t, &LookupResponse{
+			URL:           "pulsar://Odin.local:6650",
+			Authoritative: true,
+			Proxy:         true,
+		}, res)
 
-	err = client1.Close()
-	assert.NoError(t, err)
-
-	/* second lookup */
-
-	cfg := ClientConfig{
-		URL: resp1.URL,
-	}
-
-	if resp1.Proxy {
-		cfg.ProxyURL = resp1.URL
-	}
-
-	client2, err := Connect(cfg)
+		close(done)
+	})
 	assert.NoError(t, err)
 
-	resp2, err := client2.Lookup("test", resp1.Authoritative)
-	assert.NoError(t, err)
-	assert.Equal(t, &LookupResponse{
-		URL:           "pulsar://Odin.local:6650",
-		Authoritative: true,
-		Proxy:         true,
-	}, resp2)
+	safeWait(done)
 
-	err = client2.Close()
+	err = client.Close()
 	assert.NoError(t, err)
 }
 
@@ -62,21 +43,45 @@ func TestCreateProducer(t *testing.T) {
 	client, err := Connect(ClientConfig{})
 	assert.NoError(t, err)
 
-	id, lastSeq, err := client.CreateProducer("test", "test")
-	assert.NoError(t, err)
-	assert.Equal(t, uint64(0), id)
-	assert.Equal(t, int64(-1), lastSeq)
-
+	var pid uint64 = 0
 	var seq uint64 = 0
-	if lastSeq > 0 {
-		seq = uint64(lastSeq + 1)
-	}
 
-	err = client.Send(id, seq, []byte("hello"))
+	done1 := make(chan struct{})
+	err = client.CreateProducer("test", "test", func(id uint64, lastSeq int64, err error) {
+		assert.NoError(t, err)
+		assert.Equal(t, uint64(0), id)
+		assert.Equal(t, int64(-1), lastSeq)
+
+		pid = id
+		if lastSeq > 0 {
+			seq = uint64(lastSeq + 1)
+		}
+
+		close(done1)
+	})
 	assert.NoError(t, err)
 
-	err = client.CloseProducer(id)
+	safeWait(done1)
+
+	done2 := make(chan struct{})
+	err = client.Send(pid, seq, []byte("hello"), func(e error) {
+		assert.NoError(t, err)
+
+		close(done2)
+	})
 	assert.NoError(t, err)
+
+	safeWait(done2)
+
+	done3 := make(chan struct{})
+	err = client.CloseProducer(pid, func(e error) {
+		assert.NoError(t, err)
+
+		close(done3)
+	})
+	assert.NoError(t, err)
+
+	safeWait(done3)
 
 	err = client.Close()
 	assert.NoError(t, err)
@@ -86,23 +91,29 @@ func TestCreateConsumer(t *testing.T) {
 	client, err := Connect(ClientConfig{})
 	assert.NoError(t, err)
 
-	id, err := client.CreateConsumer("test", "test", "test", frame.Shared, false)
-	assert.NoError(t, err)
-	assert.Equal(t, uint64(0), id)
+	var cid uint64
+	done1 := make(chan struct{})
+	err = client.CreateConsumer("test", "test", "test", frame.Exclusive, false, func(id uint64, err error) {
+		assert.NoError(t, err)
+		assert.Equal(t, uint64(0), cid)
 
-	err = client.CloseProducer(id)
-	assert.NoError(t, err)
+		cid = id
 
-	err = client.Close()
-	assert.NoError(t, err)
-}
-
-func TestPing(t *testing.T) {
-	client, err := Connect(ClientConfig{})
+		close(done1)
+	})
 	assert.NoError(t, err)
 
-	err = client.Ping()
+	safeWait(done1)
+
+	done2 := make(chan struct{})
+	err = client.CloseConsumer(cid, func(err error) {
+		assert.NoError(t, err)
+
+		close(done2)
+	})
 	assert.NoError(t, err)
+
+	safeWait(done2)
 
 	err = client.Close()
 	assert.NoError(t, err)

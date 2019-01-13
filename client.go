@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	"github.com/256dpi/pulsar/frame"
+
+	"github.com/kr/pretty"
 )
 
 var ErrRedirect = errors.New("redirect")
@@ -27,12 +29,16 @@ type LookupResponse struct {
 }
 
 type Client struct {
-	config ClientConfig
 	conn   *Conn
 
 	producers uint64
 	consumers uint64
 	requests  uint64
+
+	requestCallbacks  map[uint64]func(frame.Frame, error)
+	producerCallbacks map[uint64]func(frame.Frame, error)
+	sendCallbacks     map[uint64]func(frame.Frame, error)
+	consumerCallbacks map[uint64]func(frame.Frame, error)
 
 	mutex sync.Mutex
 }
@@ -74,15 +80,28 @@ func Connect(config ClientConfig) (*Client, error) {
 	}
 
 	// create client
-	client := &Client{
-		config: config,
-		conn:   conn,
-	}
+	client := NewClient(conn)
 
 	return client, nil
 }
 
-func (c *Client) Lookup(topic string, authoritative bool) (*LookupResponse, error) {
+func NewClient(conn *Conn) *Client {
+	// create client
+	client := &Client{
+		conn:              conn,
+		requestCallbacks:  make(map[uint64]func(frame.Frame, error)),
+		producerCallbacks: make(map[uint64]func(frame.Frame, error)),
+		sendCallbacks:     make(map[uint64]func(frame.Frame, error)),
+		consumerCallbacks: make(map[uint64]func(frame.Frame, error)),
+	}
+
+	// run receiver
+	go client.receiver()
+
+	return client
+}
+
+func (c *Client) Lookup(topic string, authoritative bool, cb func(*LookupResponse, error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -97,45 +116,54 @@ func (c *Client) Lookup(topic string, authoritative bool) (*LookupResponse, erro
 		Authoritative: authoritative,
 	}
 
+	// store callback
+	c.requestCallbacks[rid] = func(res frame.Frame, err error) {
+		// handle error
+		if err != nil {
+			cb(nil, err)
+			return
+		}
+
+		// get lookup response frame
+		lookupResponse, ok := res.(*frame.LookupResponse)
+		if !ok {
+			cb(nil, fmt.Errorf("expected to receive a lookup response frame"))
+			return
+		}
+
+		// check if failed
+		if lookupResponse.Response == frame.LookupTypeFailed {
+			cb(nil, fmt.Errorf("lookup failed: %s, %s", lookupResponse.Error, lookupResponse.Message))
+			return
+		}
+
+		// prepare response
+		resp := &LookupResponse{
+			URL:           lookupResponse.BrokerServiceURL,
+			Authoritative: lookupResponse.Authoritative,
+			Proxy:         lookupResponse.ProxyThroughServiceURL,
+		}
+
+		// check if needs redirect
+		if lookupResponse.Response == frame.LookupTypeRedirect {
+			cb(resp, ErrRedirect)
+			return
+		}
+
+		// call callback
+		cb(resp, nil)
+	}
+
 	// send lookup frame
 	err := c.conn.Send(lookup)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// await response
-	in, err := c.conn.Receive()
-	if err != nil {
-		return nil, err
-	}
-
-	// get lookup response frame
-	lookupResponse, ok := in.(*frame.LookupResponse)
-	if !ok {
-		return nil, fmt.Errorf("expected to receive a lookup response frame")
-	}
-
-	// check if failed
-	if lookupResponse.Response == frame.LookupTypeFailed {
-		return nil, fmt.Errorf("lookup failed: %s, %s", lookupResponse.Error, lookupResponse.Message)
-	}
-
-	// prepare response
-	resp := &LookupResponse{
-		URL:           lookupResponse.BrokerServiceURL,
-		Authoritative: lookupResponse.Authoritative,
-		Proxy:         lookupResponse.ProxyThroughServiceURL,
-	}
-
-	// check if needs redirect
-	if lookupResponse.Response == frame.LookupTypeRedirect {
-		return resp, ErrRedirect
-	}
-
-	return resp, nil
+	return nil
 }
 
-func (c *Client) CreateProducer(name, topic string) (uint64, int64, error) {
+func (c *Client) CreateProducer(name, topic string, cb func(uint64, int64, error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -153,46 +181,47 @@ func (c *Client) CreateProducer(name, topic string) (uint64, int64, error) {
 		Topic: topic,
 	}
 
+	// store callback
+	c.requestCallbacks[rid] = func(res frame.Frame, err error) {
+		// check for error frame
+		if _error, ok := res.(*frame.Error); ok {
+			cb(0, 0, fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message))
+			return
+		}
+
+		// get producer success frame
+		producerSuccess, ok := res.(*frame.ProducerSuccess)
+		if !ok {
+			cb(0, 0, fmt.Errorf("expected to receive a connected frame"))
+			return
+		}
+
+		// check request id
+		if producerSuccess.RID != rid {
+			cb(0, 0, fmt.Errorf("not matching request ids"))
+			return
+		}
+
+		// check name
+		if producerSuccess.Name != name {
+			cb(0, 0, fmt.Errorf("not matching producer names"))
+			return
+		}
+
+		// call callback
+		cb(pid, producerSuccess.LastSequence, nil)
+	}
+
 	// send frame
 	err := c.conn.Send(producer)
 	if err != nil {
-		return 0, 0, err
+		return err
 	}
 
-	// await response
-	in, err := c.conn.Receive()
-	if err != nil {
-		return 0, 0, err
-	}
-
-	// check for error frame
-	if _error, ok := in.(*frame.Error); ok {
-		return 0, 0, fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message)
-	}
-
-	// get producer success frame
-	producerSuccess, ok := in.(*frame.ProducerSuccess)
-	if !ok {
-		return 0, 0, fmt.Errorf("expected to receive a connected frame")
-	}
-
-	// check request id
-	if producerSuccess.RID != rid {
-		return 0, 0, fmt.Errorf("not matching request ids")
-	}
-
-	// check name
-	if producerSuccess.Name != name {
-		return 0, 0, fmt.Errorf("not matching producer names")
-	}
-
-	// get last sequence
-	lastSeq := producerSuccess.LastSequence
-
-	return pid, lastSeq, nil
+	return nil
 }
 
-func (c *Client) Send(pid, seq uint64, msg []byte) error {
+func (c *Client) Send(pid, seq uint64, msg []byte, cb func(error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -203,33 +232,35 @@ func (c *Client) Send(pid, seq uint64, msg []byte) error {
 		Message:  msg,
 	}
 
+	// store callback
+	c.sendCallbacks[seq] = func(res frame.Frame, err error) {
+		// check for error frame
+		if _error, ok := res.(*frame.Error); ok {
+			cb(fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message))
+			return
+		}
+
+		// get send receipt frame
+		_, ok := res.(*frame.SendReceipt)
+		if !ok {
+			cb(fmt.Errorf("expected to receive a send receipt frame"))
+			return
+		}
+
+		// call callback
+		cb(nil)
+	}
+
 	// send frame
 	err := c.conn.Send(producer)
 	if err != nil {
 		return err
 	}
 
-	// await response
-	in, err := c.conn.Receive()
-	if err != nil {
-		return err
-	}
-
-	// check for error frame
-	if _error, ok := in.(*frame.Error); ok {
-		return fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message)
-	}
-
-	// get send receipt frame
-	_, ok := in.(*frame.SendReceipt)
-	if !ok {
-		return fmt.Errorf("expected to receive a send receipt frame")
-	}
-
 	return nil
 }
 
-func (c *Client) CloseProducer(id uint64) error {
+func (c *Client) CloseProducer(pid uint64, cb func(error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -240,7 +271,29 @@ func (c *Client) CloseProducer(id uint64) error {
 	// create producer frame
 	producer := &frame.CloseProducer{
 		RID: rid,
-		PID: id,
+		PID: pid,
+	}
+
+	// store callback
+	c.requestCallbacks[rid] = func(res frame.Frame, err error) {
+		// check for error frame
+		if _error, ok := res.(*frame.Error); ok {
+			cb(fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message))
+			return
+		}
+
+		// get success frame
+		_, ok := res.(*frame.Success)
+		if !ok {
+			cb(fmt.Errorf("expected to receive a sucess frame"))
+			return
+		}
+
+		// remove producer callback
+		delete(c.producerCallbacks, pid) // TODO: Lock mutex?
+
+		// call callback
+		cb(nil)
 	}
 
 	// send frame
@@ -249,32 +302,10 @@ func (c *Client) CloseProducer(id uint64) error {
 		return err
 	}
 
-	// await response
-	in, err := c.conn.Receive()
-	if err != nil {
-		return err
-	}
-
-	// check for error frame
-	if _error, ok := in.(*frame.Error); ok {
-		return fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message)
-	}
-
-	// get success frame
-	success, ok := in.(*frame.Success)
-	if !ok {
-		return fmt.Errorf("expected to receive a sucess frame")
-	}
-
-	// check request id
-	if success.RID != rid {
-		return fmt.Errorf("not matching request ids")
-	}
-
 	return nil
 }
 
-func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionType, durable bool) (uint64, error) {
+func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionType, durable bool, cb func(uint64, error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -297,38 +328,35 @@ func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionT
 		//InitialPosition
 	}
 
+	// store callback
+	c.requestCallbacks[rid] = func(res frame.Frame, err error) {
+		// check for error frame
+		if _error, ok := res.(*frame.Error); ok {
+			cb(0, fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message))
+			return
+		}
+
+		// get success frame
+		_, ok := res.(*frame.Success)
+		if !ok {
+			cb(0, fmt.Errorf("expected to receive a success frame"))
+			return
+		}
+
+		// call callback
+		cb(cid, nil)
+	}
+
 	// send frame
 	err := c.conn.Send(subscribe)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	// await response
-	in, err := c.conn.Receive()
-	if err != nil {
-		return 0, err
-	}
-
-	// check for error frame
-	if _error, ok := in.(*frame.Error); ok {
-		return 0, fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message)
-	}
-
-	// get success frame
-	success, ok := in.(*frame.Success)
-	if !ok {
-		return 0, fmt.Errorf("expected to receive a success frame")
-	}
-
-	// check request id
-	if success.RID != rid {
-		return 0, fmt.Errorf("not matching request ids")
-	}
-
-	return cid, nil
+	return nil
 }
 
-func (c *Client) CloseConsumer(id uint64) error {
+func (c *Client) CloseConsumer(cid uint64, cb func(error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -339,65 +367,35 @@ func (c *Client) CloseConsumer(id uint64) error {
 	// create consumer frame
 	consumer := &frame.CloseConsumer{
 		RID: rid,
-		CID: id,
+		CID: cid,
+	}
+
+	// store callback
+	c.requestCallbacks[rid] = func(res frame.Frame, err error) {
+		// check for error frame
+		if _error, ok := res.(*frame.Error); ok {
+			cb(fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message))
+			return
+		}
+
+		// get success frame
+		_, ok := res.(*frame.Success)
+		if !ok {
+			cb(fmt.Errorf("expected to receive a sucess frame"))
+			return
+		}
+
+		// remove consumer callback
+		delete(c.consumerCallbacks, cid) // TODO: Lock mutex?
+
+		// call callback
+		cb(nil)
 	}
 
 	// send frame
 	err := c.conn.Send(consumer)
 	if err != nil {
 		return err
-	}
-
-	// await response
-	in, err := c.conn.Receive()
-	if err != nil {
-		return err
-	}
-
-	// check for error frame
-	if _error, ok := in.(*frame.Error); ok {
-		return fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message)
-	}
-
-	// get success frame
-	success, ok := in.(*frame.Success)
-	if !ok {
-		return fmt.Errorf("expected to receive a sucess frame")
-	}
-
-	// check request id
-	if success.RID != rid {
-		return fmt.Errorf("not matching request ids")
-	}
-
-	return nil
-}
-
-func (c *Client) Ping() error {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-
-	// send ping frame
-	err := c.conn.Send(&frame.Ping{})
-	if err != nil {
-		return err
-	}
-
-	// await response
-	in, err := c.conn.Receive()
-	if err != nil {
-		return err
-	}
-
-	// check for error frame
-	if _error, ok := in.(*frame.Error); ok {
-		return fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message)
-	}
-
-	// get success frame
-	_, ok := in.(*frame.Pong)
-	if !ok {
-		return fmt.Errorf("expected to receive a pong frame")
 	}
 
 	return nil
@@ -417,22 +415,28 @@ func (c *Client) Close() error {
 }
 
 func (c *Client) receiver() {
+	// TODO: Cancel all callbacks on error.
+
 	for {
 		// receive next frame
 		f, err := c.conn.Receive()
 		if err != nil {
 			// TODO: Handle error.
+			return
 		}
 
 		// handle frame
 		err = c.handleFrame(f)
 		if err != nil {
 			// TODO: Handle error.
+			return
 		}
 	}
 }
 
 func (c *Client) handleFrame(f frame.Frame) error {
+	pretty.Println(f)
+
 	// handle frame
 	switch f.Type() {
 	case frame.CONNECT:
@@ -446,11 +450,13 @@ func (c *Client) handleFrame(f frame.Frame) error {
 	case frame.SEND:
 		// not implemented
 	case frame.SEND_RECEIPT:
-		return c.handleSendReceipt(f.(*frame.SendReceipt))
+		sr := f.(*frame.SendReceipt)
+		c.handleSendResponse(sr.PID, sr.Sequence, f)
 	case frame.SEND_ERROR:
-		return c.handleSendError(f.(*frame.SendError))
+		se := f.(*frame.SendError)
+		c.handleSendResponse(se.PID, se.Sequence, f)
 	case frame.MESSAGE:
-		return c.handleMessage(f.(*frame.Message))
+		c.handleConsumerResponse(f.(*frame.Message).CID, f)
 	case frame.ACK:
 		// not implemented
 	case frame.FLOW:
@@ -458,17 +464,17 @@ func (c *Client) handleFrame(f frame.Frame) error {
 	case frame.UNSUBSCRIBE:
 		// not implemented
 	case frame.SUCCESS:
-		return c.handleSuccess(f.(*frame.Success))
+		c.handleRequestResponse(f.(*frame.Success).RID, f)
 	case frame.ERROR:
-		return c.handleError(f.(*frame.Error))
+		c.handleRequestResponse(f.(*frame.Error).RID, f)
 	case frame.CLOSE_PRODUCER:
-		return c.handleCloseProducer(f.(*frame.CloseProducer))
+		c.handleProducerResponse(f.(*frame.CloseProducer).PID, f)
 	case frame.CLOSE_CONSUMER:
-		return c.handleCloseConsumer(f.(*frame.CloseConsumer))
+		c.handleConsumerResponse(f.(*frame.CloseConsumer).CID, f)
 	case frame.PRODUCER_SUCCESS:
-		return c.handleProducerSuccess(f.(*frame.ProducerSuccess))
+		c.handleRequestResponse(f.(*frame.ProducerSuccess).RID, f)
 	case frame.PING:
-		return c.handlePing(f.(*frame.Ping))
+		return c.handlePing()
 	case frame.PONG:
 		// not implemented
 	case frame.REDELIVER_UNACKNOWLEDGED_MESSAGES:
@@ -480,7 +486,7 @@ func (c *Client) handleFrame(f frame.Frame) error {
 	case frame.LOOKUP:
 		// not implemented
 	case frame.LOOKUP_RESPONSE:
-		return c.handleLookupResponse(f.(*frame.LookupResponse))
+		c.handleRequestResponse(f.(*frame.LookupResponse).RID, f)
 	case frame.CONSUMER_STATS:
 		// not implemented
 	case frame.CONSUMER_STATS_RESPONSE:
@@ -508,42 +514,91 @@ func (c *Client) handleFrame(f frame.Frame) error {
 	return nil
 }
 
-func (c *Client) handleSendReceipt(f *frame.SendReceipt) error {
-	return nil
+func (c *Client) handleRequestResponse(rid uint64, f frame.Frame) {
+	// acquire mutex
+	c.mutex.Lock()
+
+	// load callback
+	cb, ok := c.requestCallbacks[rid]
+	if !ok {
+		return
+	}
+
+	// delete callback
+	delete(c.requestCallbacks, rid)
+
+	// release mutex
+	c.mutex.Unlock()
+
+	// call callback
+	cb(f, nil)
 }
 
-func (c *Client) handleSendError(f *frame.SendError) error {
-	return nil
+func (c *Client) handleProducerResponse(pid uint64, f frame.Frame) {
+	// acquire mutex
+	c.mutex.Lock()
+
+	// load callback
+	cb, ok := c.producerCallbacks[pid]
+	if !ok {
+		return
+	}
+
+	// release mutex
+	c.mutex.Unlock()
+
+	// call callback
+	cb(f, nil)
 }
 
-func (c *Client) handleMessage(f *frame.Message) error {
-	return nil
+func (c *Client) handleSendResponse(pid, seq uint64, f frame.Frame) {
+	// acquire mutex
+	c.mutex.Lock()
+
+	// TODO: Also use pid?
+
+	// load callback
+	cb, ok := c.sendCallbacks[seq]
+	if !ok {
+		return
+	}
+
+	// delete callback
+	delete(c.sendCallbacks, seq)
+
+	// release mutex
+	c.mutex.Unlock()
+
+	// call callback
+	cb(f, nil)
 }
 
-func (c *Client) handleSuccess(f *frame.Success) error {
-	return nil
+func (c *Client) handleConsumerResponse(cid uint64, f frame.Frame) {
+	// acquire mutex
+	c.mutex.Lock()
+
+	// load callback
+	cb, ok := c.consumerCallbacks[cid]
+	if !ok {
+		return
+	}
+
+	// release mutex
+	c.mutex.Unlock()
+
+	// call callback
+	cb(f, nil)
 }
 
-func (c *Client) handleError(f *frame.Error) error {
-	return nil
-}
+func (c *Client) handlePing() error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 
-func (c *Client) handleCloseProducer(f *frame.CloseProducer) error {
-	return nil
-}
+	// send pong
+	err := c.conn.Send(&frame.Pong{})
+	if err != nil {
+		return err
+	}
 
-func (c *Client) handleCloseConsumer(f *frame.CloseConsumer) error {
-	return nil
-}
-
-func (c *Client) handleProducerSuccess(f *frame.ProducerSuccess) error {
-	return nil
-}
-
-func (c *Client) handlePing(f *frame.Ping) error {
-	return nil
-}
-
-func (c *Client) handleLookupResponse(f *frame.LookupResponse) error {
 	return nil
 }
