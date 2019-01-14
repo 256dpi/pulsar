@@ -224,6 +224,8 @@ func (c *Client) CreateProducer(name, topic string, rcb func(uint64, string, int
 		}
 	}
 
+	// TODO: Only store callback if request was successful?
+
 	// store producer callback
 	if pcb != nil {
 		c.producerCallbacks[pid] = func(res frame.Frame, err error) {
@@ -373,7 +375,7 @@ func (c *Client) CloseProducer(pid uint64, rcb func(error)) error {
 // CreateConsumer will send a create consumer request and call the provided callback
 // with the response. The second callback is called with ever incoming message
 // for the created consumer.
-func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionType, durable bool, rcb func(uint64, error), ccb func(*frame.Message, error)) error {
+func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionType, durable bool, rcb func(uint64, error), ccb func(*frame.Message, bool, error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -434,19 +436,24 @@ func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionT
 		c.consumerCallbacks[cid] = func(res frame.Frame, err error) {
 			// handle error
 			if err != nil {
-				ccb(nil, err)
+				ccb(nil, false, err)
 				return
+			}
+
+			// check close consumer
+			if _, ok := res.(*frame.CloseConsumer); ok {
+				ccb(nil, true, err)
 			}
 
 			// get message frame
 			message, ok := res.(*frame.Message)
 			if !ok {
-				ccb(nil, fmt.Errorf("expected to receive a message frame"))
+				ccb(nil, false, fmt.Errorf("expected to receive a message frame"))
 				return
 			}
 
 			// call callback
-			ccb(message, nil)
+			ccb(message, false, nil)
 		}
 	}
 

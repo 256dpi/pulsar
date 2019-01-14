@@ -162,8 +162,9 @@ func TestClientConsumerAndProducer(t *testing.T) {
 		cid = id
 
 		close(done2)
-	}, func(msg *frame.Message, err error) {
+	}, func(msg *frame.Message, closed bool, err error) {
 		assert.NoError(t, err)
+		assert.False(t, closed)
 		assert.Equal(t, []byte("hello"), msg.Payload)
 
 		mid = msg.MessageID

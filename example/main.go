@@ -3,7 +3,7 @@ package main
 func main() {
 	// run goroutines
 	go producer()
-	go subscriber()
+	go consumer()
 	go printer()
 	go debugger()
 

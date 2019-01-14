@@ -6,8 +6,8 @@ import (
 	"github.com/256dpi/pulsar"
 )
 
-const producerMaxInflight = 1000
-const producerSendInterval = 100 * time.Microsecond
+const producerInflightMessages = 1000
+const producerSendInterval = 20 * time.Microsecond
 
 func producer() {
 	// crete producer
@@ -24,8 +24,8 @@ func producer() {
 	}
 
 	// create and fill bucket
-	bucket := make(chan int, producerMaxInflight)
-	for i := 0; i < producerMaxInflight; i++ {
+	bucket := make(chan int, producerInflightMessages)
+	for i := 0; i < producerInflightMessages; i++ {
 		bucket <- i
 	}
 

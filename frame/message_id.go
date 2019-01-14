@@ -8,10 +8,11 @@ import (
 
 // MessageID is the id of a single message.
 type MessageID struct {
-	LedgerID   uint64
-	EntryID    uint64
-	Partition  int32
-	BatchIndex int32
+	LedgerID uint64
+	EntryID  uint64
+
+	// TODO: Support partition.
+	// TODO: Support batch index.
 }
 
 func decodeMessageID(mid *api.MessageIdData) MessageID {
@@ -21,18 +22,14 @@ func decodeMessageID(mid *api.MessageIdData) MessageID {
 	}
 
 	return MessageID{
-		LedgerID:   mid.GetLedgerId(),
-		EntryID:    mid.GetEntryId(),
-		Partition:  mid.GetPartition(),
-		BatchIndex: mid.GetBatchIndex(),
+		LedgerID: mid.GetLedgerId(),
+		EntryID:  mid.GetEntryId(),
 	}
 }
 
 func encodeMessageID(m MessageID) *api.MessageIdData {
 	return &api.MessageIdData{
-		LedgerId:   proto.Uint64(m.LedgerID),
-		EntryId:    proto.Uint64(m.EntryID),
-		Partition:  proto.Int32(m.Partition),
-		BatchIndex: proto.Int32(m.BatchIndex),
+		LedgerId: proto.Uint64(m.LedgerID),
+		EntryId:  proto.Uint64(m.EntryID),
 	}
 }
