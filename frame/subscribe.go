@@ -6,32 +6,68 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+// SubscriptionType defines the subscription type.
 type SubscriptionType int
 
 const (
+	// Exclusive subscriptions are only allowed to be subscribed by one client.
+	// Additional subscriptions will return an error.
 	Exclusive = SubscriptionType(pb.CommandSubscribe_Exclusive)
-	Shared    = SubscriptionType(pb.CommandSubscribe_Shared)
-	Failover  = SubscriptionType(pb.CommandSubscribe_Failover)
+
+	// In shared subscriptions, messages are distributed among the consumers.
+	Shared = SubscriptionType(pb.CommandSubscribe_Shared)
+
+	// In failover subscriptions, additional consumers wait until the main
+	// consumer closes.
+	Failover = SubscriptionType(pb.CommandSubscribe_Failover)
 )
 
+// InitialPosition defines the initial position of a subscription.
 type InitialPosition int
 
 const (
-	Latest   = InitialPosition(pb.CommandSubscribe_Latest)
+	// Latest will begin consuming messages from the latest message.
+	Latest = InitialPosition(pb.CommandSubscribe_Latest)
+
+	// Earliest will begin consuming messages from the earliest message.
 	Earliest = InitialPosition(pb.CommandSubscribe_Earliest)
 )
 
+// Subscribe is sent to the broker to create a consumer.
 type Subscribe struct {
-	RID             uint64
-	CID             uint64
-	Name            string
-	Topic           string
-	Subscription    string
-	SubType         SubscriptionType
-	PriorityLevel   int32
-	Durable         bool
-	StartMessageID  *MessageID
+	// The request id.
+	RID uint64
+
+	// The consumer id.
+	CID uint64
+
+	// The consumer name.
+	Name string
+
+	// The topic.
+	Topic string
+
+	// The subscription name.
+	Subscription string
+
+	// The subscription type.
+	//
+	// Default: Exclusive.
+	SubType SubscriptionType
+
+	// The durable flag.
+	Durable bool
+
+	// The initial position for the subscription.
+	//
+	// Default: Latest.
 	InitialPosition InitialPosition
+
+	// TODO: Support priority level.
+	// TODO: Support start message id.
+	// TODO: Support metadata.
+	// TODO: Support compacted read.
+	// TODO: Support schema.
 }
 
 // Type will return the frame type.
@@ -47,15 +83,13 @@ func (s *Subscribe) Encode() (*pb.BaseCommand, error) {
 
 	// prepare subscribe command
 	subscribe := &pb.CommandSubscribe{
-		RequestId:     proto.Uint64(s.RID),
-		ConsumerId:    proto.Uint64(s.CID),
-		ConsumerName:  proto.String(s.Name),
-		Topic:         proto.String(s.Topic),
-		Subscription:  proto.String(s.Subscription),
-		SubType:       &subType,
-		PriorityLevel: proto.Int32(s.PriorityLevel),
-		Durable:       proto.Bool(s.Durable),
-		// StartMessageId
+		RequestId:       proto.Uint64(s.RID),
+		ConsumerId:      proto.Uint64(s.CID),
+		ConsumerName:    proto.String(s.Name),
+		Topic:           proto.String(s.Topic),
+		Subscription:    proto.String(s.Subscription),
+		SubType:         &subType,
+		Durable:         proto.Bool(s.Durable),
 		InitialPosition: &inPos,
 	}
 
