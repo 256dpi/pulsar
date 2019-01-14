@@ -125,13 +125,13 @@ func (c *Client) Lookup(topic string, authoritative bool, rcb func(*frame.Lookup
 			}
 
 			// check if failed
-			if lookupResponse.Response == frame.LookupTypeFailed {
+			if lookupResponse.ResponseType == frame.Failed {
 				rcb(nil, fmt.Errorf("lookup failed: %s, %s", lookupResponse.Error, lookupResponse.Message))
 				return
 			}
 
 			// check if needs redirect
-			if lookupResponse.Response == frame.LookupTypeRedirect {
+			if lookupResponse.ResponseType == frame.Redirect {
 				rcb(lookupResponse, ErrRedirect)
 				return
 			}
@@ -402,8 +402,8 @@ func (c *Client) Flow(cid uint64, num uint32) error {
 
 	// create flow frame
 	flow := &frame.Flow{
-		CID:            cid,
-		MessagePermits: num,
+		CID:      cid,
+		Messages: num,
 	}
 
 	// send frame

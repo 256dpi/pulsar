@@ -8,13 +8,13 @@ import (
 
 // Error is received from the broker when a request failed.
 type Error struct {
-	// RID is the request id.
+	// The request id.
 	RID uint64
 
-	// Code is the error code.
+	// The error code.
 	Code string
 
-	// Message is an additional error message
+	// The error message.
 	Message string
 }
 

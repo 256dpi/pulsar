@@ -19,13 +19,13 @@ const (
 
 // Ack is the frame sent to acknowledge a received message.
 type Ack struct {
-	// CID is the consumer id.
+	// The consumer id.
 	CID uint64
 
-	// AckType is the acknowledgment type.
+	// The acknowledgment type.
 	AckType AckType
 
-	// MessageIDs are the messages to acknowledge.
+	// The message ids to acknowledge.
 	MessagedIDs []MessageID
 
 	// TODO: Support validation error.

@@ -9,11 +9,11 @@ import (
 // CloseProducer is sent to close a producer or received if a producer has been
 // closed by the broker.
 type CloseProducer struct {
-	// PID is the producer id.
-	PID uint64
-
-	// RID is the request id.
+	// The request id.
 	RID uint64
+
+	// The producer id.
+	PID uint64
 }
 
 // Type will return the frame type.
@@ -51,8 +51,11 @@ func (p *CloseProducer) Decode(bc *pb.BaseCommand) error {
 // CloseConsumer is sent to close a consumer or received if a consumer has been
 // closed by the broker.
 type CloseConsumer struct {
-	CID uint64
+	// The request id.
 	RID uint64
+
+	// The consumer id.
+	CID uint64
 }
 
 // Type will return the frame type.

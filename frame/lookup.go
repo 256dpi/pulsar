@@ -1,15 +1,28 @@
 package frame
 
 import (
+	"fmt"
+
 	"github.com/256dpi/pulsar/pb"
 
 	"github.com/golang/protobuf/proto"
 )
 
+// Lookup performs a topic lookup request.
 type Lookup struct {
-	RID           uint64
-	Topic         string
+	// The request id.
+	RID uint64
+
+	// The topic too lookup.
+	Topic string
+
+	// The authoritative flag.
+	//
+	// Should be initially set to false. When following a redirect response,
+	// clients should pass the same value contained in the response.
 	Authoritative bool
+
+	// TODO: Support original principal and auth method?
 }
 
 // Type will return the frame type.
@@ -34,23 +47,48 @@ func (l *Lookup) Encode() (*pb.BaseCommand, error) {
 	return base, nil
 }
 
-type LookupType int
+// LookupResponseType defines the type of the lookup response.
+type LookupResponseType int
 
 const (
-	LookupTypeRedirect = LookupType(pb.CommandLookupTopicResponse_Redirect)
-	LookupTypeConnect  = LookupType(pb.CommandLookupTopicResponse_Connect)
-	LookupTypeFailed   = LookupType(pb.CommandLookupTopicResponse_Failed)
+	// Redirect instructs the client to redirect the lookup request to the
+	// provided broker.
+	Redirect = LookupResponseType(pb.CommandLookupTopicResponse_Redirect)
+
+	// Final instructs to connect to the provided broker.
+	Final = LookupResponseType(pb.CommandLookupTopicResponse_Connect)
+
+	// Failed defines a failed lookup request.
+	Failed = LookupResponseType(pb.CommandLookupTopicResponse_Failed)
 )
 
+// LookupResponse is received as a response to the Lookup request.
 type LookupResponse struct {
-	RID                    uint64
-	BrokerServiceURL       string
-	BrokerServiceURLTLS    string
-	Response               LookupType
-	Authoritative          bool
-	Error                  string
-	Message                string
-	ProxyThroughServiceURL bool
+	// The request id.
+	RID uint64
+
+	// The response type.
+	ResponseType LookupResponseType
+
+	// The insecure connection URL.
+	BrokerURL string
+
+	// The secure connection URL.
+	SecureBrokerURL string
+
+	// The authoritative flag.
+	//
+	// Should be forwarded when following a redirect.
+	Authoritative bool
+
+	// If set the client should proxy through the provided broker URL.
+	ProxyThroughBrokerURL bool
+
+	// The error if failed
+	ErrorCode string
+
+	// The error message if failed.
+	ErrorMessage string
 }
 
 // Type will return the frame type.
@@ -58,17 +96,26 @@ func (r *LookupResponse) Type() Type {
 	return LOOKUP_RESPONSE
 }
 
+// Error implements the error interface.
+func (r *LookupResponse) Error() string {
+	if r.ErrorMessage != "" {
+		return fmt.Sprintf("pulsar: %s: %s", r.ErrorCode, r.ErrorMessage)
+	} else {
+		return fmt.Sprintf("pulsar: %s", r.ErrorCode)
+	}
+}
+
 // Decode will construct the frame from the specified components.
 func (r *LookupResponse) Decode(bc *pb.BaseCommand) error {
 	// set fields
 	r.RID = bc.LookupTopicResponse.GetRequestId()
-	r.BrokerServiceURL = bc.LookupTopicResponse.GetBrokerServiceUrl()
-	r.BrokerServiceURLTLS = bc.LookupTopicResponse.GetBrokerServiceUrlTls()
-	r.Response = LookupType(bc.LookupTopicResponse.GetResponse())
+	r.ResponseType = LookupResponseType(bc.LookupTopicResponse.GetResponse())
+	r.BrokerURL = bc.LookupTopicResponse.GetBrokerServiceUrl()
+	r.SecureBrokerURL = bc.LookupTopicResponse.GetBrokerServiceUrlTls()
 	r.Authoritative = bc.LookupTopicResponse.GetAuthoritative()
-	r.Error = pb.ServerError_name[int32(bc.LookupTopicResponse.GetError())]
-	r.Message = bc.LookupTopicResponse.GetMessage()
-	r.ProxyThroughServiceURL = bc.LookupTopicResponse.GetProxyThroughServiceUrl()
+	r.ProxyThroughBrokerURL = bc.LookupTopicResponse.GetProxyThroughServiceUrl()
+	r.ErrorCode = pb.ServerError_name[int32(bc.LookupTopicResponse.GetError())]
+	r.ErrorMessage = bc.LookupTopicResponse.GetMessage()
 
 	return nil
 }

@@ -24,11 +24,11 @@ func TestLookup(t *testing.T) {
 	err = client.Lookup("test", false, func(res *frame.LookupResponse, err error) {
 		assert.NoError(t, err)
 		assert.Equal(t, &frame.LookupResponse{
-			BrokerServiceURL:       "pulsar://Odin.local:6650",
-			Response:               frame.LookupTypeConnect,
-			Authoritative:          true,
-			ProxyThroughServiceURL: true,
-			Error:                  "UnknownError",
+			BrokerURL:             "pulsar://Odin.local:6650",
+			ResponseType:          frame.Final,
+			Authoritative:         true,
+			ProxyThroughBrokerURL: true,
+			Error:                 "UnknownError",
 		}, res)
 
 		close(done)
