@@ -195,6 +195,8 @@ func (c *Client) CreateProducer(name, topic string, rcb func(uint64, int64, erro
 		}
 	}
 
+	// TODO: Store producer callback.
+
 	// send frame
 	err := c.send(producer)
 	if err != nil {
