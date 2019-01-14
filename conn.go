@@ -2,6 +2,7 @@ package pulsar
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"net"
 	"net/url"
@@ -13,8 +14,13 @@ import (
 	"github.com/256dpi/mercury"
 )
 
-// Conn is a low level connection to a pulsar broker that can send and receive
-// frames.
+const defaultHost = "localhost"
+const defaultPort = "6650"
+
+var defaultAddr = fmt.Sprintf("pulsar://%s:%s", defaultHost, defaultPort)
+
+// Conn is a low level connection to a pulsar broker that is used to send and
+// receive frames. It is safe for concurrent use.
 type Conn struct {
 	reader *bufio.Reader
 	writer *mercury.Writer
@@ -24,11 +30,12 @@ type Conn struct {
 	rMutex sync.Mutex
 }
 
-// Dial will connect to the specified broker and establish a connection.
+// Dial will connect to the specified broker and establish a connection. It will
+// fallback to the default address "pulsar://localhost:6650" if missing.
 func Dial(addr string) (*Conn, error) {
 	// set default addr
 	if addr == "" {
-		addr = "pulsar://localhost:6650"
+		addr = defaultAddr
 	}
 
 	// parse address
@@ -37,8 +44,29 @@ func Dial(addr string) (*Conn, error) {
 		return nil, err
 	}
 
+	// check scheme
+	if loc.Scheme != "pulsar:" {
+		return nil, fmt.Errorf("address scheme is not 'pulsar:'")
+	}
+
+	// split host port
+	host, port, err := net.SplitHostPort(loc.Host)
+	if err != nil {
+		return nil, err
+	}
+
+	// check host
+	if host == "" {
+		host = defaultHost
+	}
+
+	// check port
+	if port == "" {
+		port = defaultPort
+	}
+
 	// create connection
-	conn, err := net.Dial("tcp", loc.Host)
+	conn, err := net.Dial("tcp", net.JoinHostPort(host, port))
 	if err != nil {
 		return nil, err
 	}
