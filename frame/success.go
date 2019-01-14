@@ -2,7 +2,9 @@ package frame
 
 import "github.com/256dpi/pulsar/pb"
 
+// Success is sent by the broker to acknowledge requests.
 type Success struct {
+	// The request id.
 	RID uint64
 }
 

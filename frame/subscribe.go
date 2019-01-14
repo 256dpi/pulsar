@@ -14,11 +14,11 @@ const (
 	// Additional subscriptions will return an error.
 	Exclusive = SubscriptionType(pb.CommandSubscribe_Exclusive)
 
-	// In shared subscriptions, messages are distributed among the consumers.
+	// Shared subscriptions allow messages to be distributed among the consumers.
 	Shared = SubscriptionType(pb.CommandSubscribe_Shared)
 
-	// In failover subscriptions, additional consumers wait until the main
-	// consumer closes.
+	// Failover subscriptions allow additional consumers to take over when the
+	// active consumer fail.s
 	Failover = SubscriptionType(pb.CommandSubscribe_Failover)
 )
 

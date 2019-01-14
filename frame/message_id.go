@@ -6,6 +6,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+// MessageID is the id of a single message.
 type MessageID struct {
 	LedgerID   uint64
 	EntryID    uint64

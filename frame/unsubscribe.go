@@ -6,8 +6,12 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+// Unsubscribe will remove the subscription from the broker.
 type Unsubscribe struct {
+	// The request id.
 	RID uint64
+
+	// The consumer id.
 	CID uint64
 }
 

@@ -11,6 +11,7 @@ import (
 // TODO: Encode all metadata?
 // TODO: Split in MessageMetadata and SendMetadata?
 
+// Metadata is data associated with sent and received message.
 type Metadata struct {
 	Sequence     uint64
 	ProducerName string

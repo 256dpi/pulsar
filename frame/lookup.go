@@ -100,9 +100,9 @@ func (r *LookupResponse) Type() Type {
 func (r *LookupResponse) Error() string {
 	if r.ErrorMessage != "" {
 		return fmt.Sprintf("pulsar: %s: %s", r.ErrorCode, r.ErrorMessage)
-	} else {
-		return fmt.Sprintf("pulsar: %s", r.ErrorCode)
 	}
+
+	return fmt.Sprintf("pulsar: %s", r.ErrorCode)
 }
 
 // Decode will construct the frame from the specified components.

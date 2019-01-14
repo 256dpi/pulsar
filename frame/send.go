@@ -100,9 +100,9 @@ func (e *SendError) Type() Type {
 func (e *SendError) Error() string {
 	if e.Message != "" {
 		return fmt.Sprintf("pulsar: %s: %s", e.Code, e.Message)
-	} else {
-		return fmt.Sprintf("pulsar: %s", e.Code)
 	}
+
+	return fmt.Sprintf("pulsar: %s", e.Code)
 }
 
 // Decode will construct the frame from the specified components.
