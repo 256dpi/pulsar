@@ -163,7 +163,7 @@ func (c *Client) CreateProducer(name, topic string, rcb func(uint64, int64, erro
 	// create producer frame
 	producer := &frame.Producer{
 		RID:   rid,
-		ID:    pid,
+		PID:   pid,
 		Name:  name,
 		Topic: topic,
 	}

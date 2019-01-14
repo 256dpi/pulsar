@@ -8,6 +8,9 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+// TODO: Encode all metadata?
+// TODO: Split in MessageMetadata and SendMetadata?
+
 type Metadata struct {
 	Sequence     uint64
 	ProducerName string

@@ -1,18 +1,25 @@
 package frame
 
 import (
-	"time"
-
+	"fmt"
 	"github.com/256dpi/pulsar/pb"
 
 	"github.com/golang/protobuf/proto"
 )
 
+// Send will send a message to the broker.
 type Send struct {
-	PID          uint64
-	Sequence     uint64
-	ProducerName string
-	Message      []byte
+	// The producer id.
+	PID uint64
+
+	// The sequence.
+	Sequence uint64
+
+	// The message metadata.
+	Metadata Metadata
+
+	// The message.
+	Message []byte
 }
 
 // Type will return the frame type.
@@ -36,18 +43,21 @@ func (s *Send) Encode() (*pb.BaseCommand, *pb.MessageMetadata, []byte, error) {
 	}
 
 	// prepare metadata
-	metadata := &pb.MessageMetadata{
-		ProducerName: proto.String(s.ProducerName),
-		SequenceId:   proto.Uint64(s.Sequence),
-		PublishTime:  proto.Uint64(uint64(time.Now().Unix())),
-	}
+	metadata := encodeMetadata(s.Metadata)
 
 	return base, metadata, s.Message, nil
 }
 
+// SendReceipt is received by the client if a message has been successfully
+// produced.
 type SendReceipt struct {
-	PID       uint64
-	Sequence  uint64
+	// The producer id
+	PID uint64
+
+	// The message sequence.
+	Sequence uint64
+
+	// The message id.
 	MessageID MessageID
 }
 
@@ -66,11 +76,19 @@ func (r *SendReceipt) Decode(bc *pb.BaseCommand) error {
 	return nil
 }
 
+// SendError is received by the client if the broker failed to produce a message.
 type SendError struct {
-	PID      uint64
+	// The producer id.
+	PID uint64
+
+	// The message sequence.
 	Sequence uint64
-	Error    string
-	Message  string
+
+	// The error code.
+	Code string
+
+	// The error message.
+	Message string
 }
 
 // Type will return the frame type.
@@ -78,12 +96,21 @@ func (e *SendError) Type() Type {
 	return SEND_ERROR
 }
 
+// Error implements the error interface.
+func (e *SendError) Error() string {
+	if e.Message != "" {
+		return fmt.Sprintf("pulsar: %s: %s", e.Code, e.Message)
+	} else {
+		return fmt.Sprintf("pulsar: %s", e.Code)
+	}
+}
+
 // Decode will construct the frame from the specified components.
 func (e *SendError) Decode(bc *pb.BaseCommand) error {
 	// set fields
 	e.PID = bc.SendError.GetProducerId()
 	e.Sequence = bc.SendError.GetSequenceId()
-	e.Error = pb.ServerError_name[int32(bc.SendError.GetError())]
+	e.Code = pb.ServerError_name[int32(bc.SendError.GetError())]
 	e.Message = bc.SendError.GetMessage()
 
 	return nil

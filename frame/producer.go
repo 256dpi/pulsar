@@ -6,11 +6,23 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+// Producer is sent to the broker to create a producer.
 type Producer struct {
-	RID   uint64
-	ID    uint64
-	Name  string
+	// The request id.
+	RID uint64
+
+	// The producer id.
+	PID uint64
+
+	// The producer name.
+	Name string
+
+	// The topic.
 	Topic string
+
+	// TODO: Support encrypted.
+	// TODO: Support metadata.
+	// TODO: Support schema.
 }
 
 // Type will return the frame type.
@@ -23,12 +35,9 @@ func (p *Producer) Encode() (*pb.BaseCommand, error) {
 	// prepare producer command
 	producer := &pb.CommandProducer{}
 	producer.Topic = proto.String(p.Topic)
-	producer.ProducerId = proto.Uint64(p.ID)
+	producer.ProducerId = proto.Uint64(p.PID)
 	producer.RequestId = proto.Uint64(p.RID)
 	producer.ProducerName = proto.String(p.Name)
-	//producer.Encrypted
-	//producer.Metadata
-	//producer.Schema
 
 	// prepare base command
 	base := &pb.BaseCommand{
@@ -39,10 +48,18 @@ func (p *Producer) Encode() (*pb.BaseCommand, error) {
 	return base, nil
 }
 
+// ProducerSuccess is received as a response to the Producer request.
 type ProducerSuccess struct {
-	RID          uint64
-	Name         string
+	// The request id.
+	RID uint64
+
+	// The producer name.
+	Name string
+
+	// The last sequence.
 	LastSequence int64
+
+	// TODO: Support schema version.
 }
 
 // Type will return the frame type.
