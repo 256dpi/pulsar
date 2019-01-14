@@ -16,7 +16,7 @@ func TestConnect(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestLookup(t *testing.T) {
+func TestClientLookup(t *testing.T) {
 	client, err := Connect(ClientConfig{})
 	assert.NoError(t, err)
 
@@ -40,7 +40,7 @@ func TestLookup(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestCreateProducer(t *testing.T) {
+func TestClientCreateProducer(t *testing.T) {
 	client, err := Connect(ClientConfig{})
 	assert.NoError(t, err)
 
@@ -87,7 +87,7 @@ func TestCreateProducer(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestCreateConsumer(t *testing.T) {
+func TestClientCreateConsumer(t *testing.T) {
 	client, err := Connect(ClientConfig{})
 	assert.NoError(t, err)
 
@@ -119,7 +119,7 @@ func TestCreateConsumer(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestConsumerAndProducer(t *testing.T) {
+func TestClientConsumerAndProducer(t *testing.T) {
 	client, err := Connect(ClientConfig{})
 	assert.NoError(t, err)
 

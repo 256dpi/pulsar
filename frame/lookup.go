@@ -73,9 +73,6 @@ type LookupResponse struct {
 	// The insecure connection URL.
 	BrokerURL string
 
-	// The secure connection URL.
-	SecureBrokerURL string
-
 	// The authoritative flag.
 	//
 	// Should be forwarded when following a redirect.
@@ -89,6 +86,8 @@ type LookupResponse struct {
 
 	// The error message if failed.
 	ErrorMessage string
+
+	// TODO: Support secure broker url.
 }
 
 // Type will return the frame type.
@@ -111,7 +110,6 @@ func (r *LookupResponse) Decode(bc *pb.BaseCommand) error {
 	r.RID = bc.LookupTopicResponse.GetRequestId()
 	r.ResponseType = LookupResponseType(bc.LookupTopicResponse.GetResponse())
 	r.BrokerURL = bc.LookupTopicResponse.GetBrokerServiceUrl()
-	r.SecureBrokerURL = bc.LookupTopicResponse.GetBrokerServiceUrlTls()
 	r.Authoritative = bc.LookupTopicResponse.GetAuthoritative()
 	r.ProxyThroughBrokerURL = bc.LookupTopicResponse.GetProxyThroughServiceUrl()
 

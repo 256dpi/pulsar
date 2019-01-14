@@ -1,14 +1,11 @@
 package pulsar
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 
 	"github.com/256dpi/pulsar/frame"
 )
-
-var ErrRedirect = errors.New("redirect")
 
 type ClientConfig struct {
 	// The Pulsar connection URL. Will default to "pulsar://localhost:6650".
@@ -127,12 +124,6 @@ func (c *Client) Lookup(topic string, authoritative bool, rcb func(*frame.Lookup
 			// check if failed
 			if lookupResponse.ResponseType == frame.Failed {
 				rcb(nil, lookupResponse)
-				return
-			}
-
-			// check if needs redirect
-			if lookupResponse.ResponseType == frame.Redirect {
-				rcb(lookupResponse, ErrRedirect)
 				return
 			}
 
