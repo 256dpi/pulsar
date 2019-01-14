@@ -2,6 +2,7 @@ package pulsar
 
 import (
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/256dpi/pulsar/frame"
@@ -26,6 +27,7 @@ var ErrLookupResponseTimeout = errors.New("lookup response timeout")
 // ErrLookupRedirectLimit is returned if the redirect limit has been reached.
 var ErrLookupRedirectLimit = errors.New("lookup redirect limit")
 
+var lookupMutex sync.Mutex
 var lookupClientCache = cache.New(lookupCacheTimeout, lookupCacheTimeout)
 
 // Lookup will lookup the provided topic by sending and initial request to the
@@ -34,7 +36,8 @@ var lookupClientCache = cache.New(lookupCacheTimeout, lookupCacheTimeout)
 //
 // Created clients are cached for up to a minute.
 func Lookup(url, topic string) (*frame.LookupResponse, int, error) {
-	// TODO: Need mutex?
+	lookupMutex.Lock()
+	defer lookupMutex.Unlock()
 
 	// perform initial lookup
 	res, err := singleLookup(url, topic, false)
