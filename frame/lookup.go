@@ -114,8 +114,12 @@ func (r *LookupResponse) Decode(bc *pb.BaseCommand) error {
 	r.SecureBrokerURL = bc.LookupTopicResponse.GetBrokerServiceUrlTls()
 	r.Authoritative = bc.LookupTopicResponse.GetAuthoritative()
 	r.ProxyThroughBrokerURL = bc.LookupTopicResponse.GetProxyThroughServiceUrl()
-	r.ErrorCode = pb.ServerError_name[int32(bc.LookupTopicResponse.GetError())]
-	r.ErrorMessage = bc.LookupTopicResponse.GetMessage()
+
+	// read error info if failed
+	if r.ResponseType == Failed {
+		r.ErrorCode = pb.ServerError_name[int32(bc.LookupTopicResponse.GetError())]
+		r.ErrorMessage = bc.LookupTopicResponse.GetMessage()
+	}
 
 	return nil
 }

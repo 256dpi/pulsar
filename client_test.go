@@ -28,7 +28,6 @@ func TestLookup(t *testing.T) {
 			ResponseType:          frame.Final,
 			Authoritative:         true,
 			ProxyThroughBrokerURL: true,
-			Error:                 "UnknownError",
 		}, res)
 
 		close(done)
@@ -157,7 +156,7 @@ func TestConsumerAndProducer(t *testing.T) {
 		close(done2)
 	}, func(msg *frame.Message, err error) {
 		assert.NoError(t, err)
-		assert.Equal(t, []byte("hello"), msg.Message)
+		assert.Equal(t, []byte("hello"), msg.Payload)
 
 		mid = msg.MessageID
 		close(done4)

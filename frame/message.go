@@ -2,13 +2,22 @@ package frame
 
 import "github.com/256dpi/pulsar/pb"
 
+// Message is an incoming message received by a consumer.
 type Message struct {
-	CID             uint64
-	MessageID       MessageID
+	// The consumer id.
+	CID uint64
+
+	// The message id.
+	MessageID MessageID
+
+	// The redelivery count.
 	RedeliveryCount uint32
-	Sequence        uint64
-	ProducerName    string
-	Message         []byte
+
+	// The message metadata.
+	Metadata Metadata
+
+	// The message payload.
+	Payload []byte
 }
 
 // Type will return the frame type.
@@ -22,9 +31,8 @@ func (m *Message) Decode(bc *pb.BaseCommand, md *pb.MessageMetadata, payload []b
 	m.CID = bc.Message.GetConsumerId()
 	m.MessageID = decodeMessageID(bc.Message.MessageId)
 	m.RedeliveryCount = bc.Message.GetRedeliveryCount()
-	m.Sequence = md.GetSequenceId()
-	m.ProducerName = md.GetProducerName()
-	m.Message = payload
+	m.Metadata = decodeMetadata(md)
+	m.Payload = payload
 
 	return nil
 }

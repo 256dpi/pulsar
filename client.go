@@ -126,7 +126,7 @@ func (c *Client) Lookup(topic string, authoritative bool, rcb func(*frame.Lookup
 
 			// check if failed
 			if lookupResponse.ResponseType == frame.Failed {
-				rcb(nil, fmt.Errorf("lookup failed: %s, %s", lookupResponse.Error, lookupResponse.Message))
+				rcb(nil, lookupResponse)
 				return
 			}
 

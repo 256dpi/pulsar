@@ -2,6 +2,7 @@ package frame
 
 import "github.com/256dpi/pulsar/pb"
 
+// Ping is a ping message sent by the broker.
 type Ping struct{}
 
 // Type will return the frame type.
@@ -25,6 +26,7 @@ func (p *Ping) Encode() (*pb.BaseCommand, error) {
 	return base, nil
 }
 
+// Pong is a pong message sent by the client.
 type Pong struct{}
 
 // Type will return the frame type.
