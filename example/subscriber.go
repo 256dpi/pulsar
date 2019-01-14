@@ -61,7 +61,7 @@ func subscriber() {
 		t, _ := time.Parse(time.RFC3339Nano, string(msg.Payload))
 
 		// save diff
-		diff = append(diff, float64(time.Since(t)) / float64(time.Millisecond))
+		diff = append(diff, float64(time.Since(t))/float64(time.Millisecond))
 	})
 	if err != nil {
 		panic(err)

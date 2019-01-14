@@ -25,7 +25,7 @@ func producer() {
 
 	// create and fill bucket
 	bucket := make(chan int, producerMaxInflight)
-	for i:=0; i<producerMaxInflight; i++ {
+	for i := 0; i < producerMaxInflight; i++ {
 		bucket <- i
 	}
 
