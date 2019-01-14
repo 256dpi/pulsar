@@ -1,11 +1,15 @@
 package pulsar
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 
 	"github.com/256dpi/pulsar/frame"
 )
+
+// ErrClientClosed indicates that the client has been closed.
+var ErrClientClosed = errors.New("client closed")
 
 // ClientConfig defines basic settings to establish a connection with a Pulsar
 // broker.
@@ -34,7 +38,8 @@ type Client struct {
 	sendCallbacks     map[string]func(frame.Frame, error)
 	consumerCallbacks map[uint64]func(frame.Frame, error)
 
-	mutex sync.Mutex
+	closed bool
+	mutex  sync.Mutex
 }
 
 // Connect will connect to the provided broker and return a client.
@@ -103,6 +108,11 @@ func (c *Client) Lookup(topic string, authoritative bool, rcb func(*frame.Lookup
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
+	// check state
+	if c.closed {
+		return ErrClientClosed
+	}
+
 	// increment counters
 	rid := c.requests
 	c.requests++
@@ -152,9 +162,14 @@ func (c *Client) Lookup(topic string, authoritative bool, rcb func(*frame.Lookup
 
 // CreateProducer will send a create producer request and call the provided callback
 // with the response.
-func (c *Client) CreateProducer(name, topic string, rcb func(uint64, int64, error)) error {
+func (c *Client) CreateProducer(name, topic string, rcb func(uint64, string, int64, error), pcb func(bool, error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+
+	// check state
+	if c.closed {
+		return ErrClientClosed
+	}
 
 	// increment counters
 	rid := c.requests
@@ -175,41 +190,60 @@ func (c *Client) CreateProducer(name, topic string, rcb func(uint64, int64, erro
 		c.requestCallbacks[rid] = func(res frame.Frame, err error) {
 			// handle error
 			if err != nil {
-				rcb(0, 0, err)
+				rcb(0, "", 0, err)
 				return
 			}
 
 			// check for error frame
 			if _error, ok := res.(*frame.Error); ok {
-				rcb(0, 0, _error)
+				rcb(0, "", 0, _error)
 				return
 			}
 
 			// get producer success frame
 			producerSuccess, ok := res.(*frame.ProducerSuccess)
 			if !ok {
-				rcb(0, 0, fmt.Errorf("expected to receive a connected frame"))
+				rcb(0, "", 0, fmt.Errorf("expected to receive a connected frame"))
 				return
 			}
 
 			// check request id
 			if producerSuccess.RID != rid {
-				rcb(0, 0, fmt.Errorf("not matching request ids"))
+				rcb(0, "", 0, fmt.Errorf("not matching request ids"))
 				return
 			}
 
 			// check name
 			if producerSuccess.Name != name {
-				rcb(0, 0, fmt.Errorf("not matching producer names"))
+				rcb(0, "", 0, fmt.Errorf("not matching producer names"))
 				return
 			}
 
 			// call callback
-			rcb(pid, producerSuccess.LastSequence, nil)
+			rcb(pid, producerSuccess.Name, producerSuccess.LastSequence, nil)
 		}
 	}
 
-	// TODO: Store producer callback.
+	// store producer callback
+	if pcb != nil {
+		c.producerCallbacks[pid] = func(res frame.Frame, err error) {
+			// handle error
+			if err != nil {
+				pcb(false, err)
+				return
+			}
+
+			// get close producer frame
+			_, ok := res.(*frame.CloseProducer)
+			if !ok {
+				pcb(false, err)
+				return
+			}
+
+			// call callback
+			pcb(true, nil)
+		}
+	}
 
 	// send frame
 	err := c.send(producer)
@@ -225,6 +259,11 @@ func (c *Client) CreateProducer(name, topic string, rcb func(uint64, int64, erro
 func (c *Client) Send(pid, seq uint64, msg []byte, scb func(error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+
+	// check state
+	if c.closed {
+		return ErrClientClosed
+	}
 
 	// create send frame
 	producer := &frame.Send{
@@ -274,6 +313,11 @@ func (c *Client) Send(pid, seq uint64, msg []byte, scb func(error)) error {
 func (c *Client) CloseProducer(pid uint64, rcb func(error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+
+	// check state
+	if c.closed {
+		return ErrClientClosed
+	}
 
 	// increment counters
 	rid := c.requests
@@ -332,6 +376,11 @@ func (c *Client) CloseProducer(pid uint64, rcb func(error)) error {
 func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionType, durable bool, rcb func(uint64, error), ccb func(*frame.Message, error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+
+	// check state
+	if c.closed {
+		return ErrClientClosed
+	}
 
 	// increment counters
 	rid := c.requests
@@ -415,6 +464,11 @@ func (c *Client) Flow(cid uint64, num uint32) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
+	// check state
+	if c.closed {
+		return ErrClientClosed
+	}
+
 	// create flow frame
 	flow := &frame.Flow{
 		CID:      cid,
@@ -434,6 +488,11 @@ func (c *Client) Flow(cid uint64, num uint32) error {
 func (c *Client) Ack(cid uint64, typ frame.AckType, mid frame.MessageID) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+
+	// check state
+	if c.closed {
+		return ErrClientClosed
+	}
 
 	// create ack frame
 	ack := &frame.Ack{
@@ -456,6 +515,11 @@ func (c *Client) Ack(cid uint64, typ frame.AckType, mid frame.MessageID) error {
 func (c *Client) CloseConsumer(cid uint64, rcb func(error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+
+	// check state
+	if c.closed {
+		return ErrClientClosed
+	}
 
 	// increment counters
 	rid := c.requests
@@ -513,11 +577,19 @@ func (c *Client) Close() error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
+	// check state
+	if c.closed {
+		return ErrClientClosed
+	}
+
 	// close connection
 	err := c.conn.Close()
 	if err != nil {
 		return err
 	}
+
+	// set flag
+	c.closed = true
 
 	return nil
 }
@@ -532,20 +604,18 @@ func (c *Client) send(f frame.Frame) error {
 }
 
 func (c *Client) receiver() {
-	// TODO: Cancel all callbacks on error.
-
 	for {
 		// receive next frame
 		f, err := c.conn.Receive()
 		if err != nil {
-			// TODO: Handle error.
+			c.die(err)
 			return
 		}
 
 		// handle frame
 		err = c.handleFrame(f)
 		if err != nil {
-			// TODO: Handle error.
+			c.die(err)
 			return
 		}
 	}
@@ -717,6 +787,42 @@ func (c *Client) handlePing() error {
 	}
 
 	return nil
+}
+
+func (c *Client) die(err error) {
+	// acquire mutex
+	c.mutex.Lock()
+
+	// override error if client has been closed
+	if c.closed {
+		err = ErrClientClosed
+	}
+
+	// set flag
+	c.closed = true
+
+	// release mutex
+	c.mutex.Unlock()
+
+	// cancel request callbacks
+	for _, cb := range c.requestCallbacks {
+		cb(nil, err)
+	}
+
+	// cancel producer callbacks
+	for _, cb := range c.producerCallbacks {
+		cb(nil, err)
+	}
+
+	// cancel send callbacks
+	for _, cb := range c.sendCallbacks {
+		cb(nil, err)
+	}
+
+	// cancel consumer callbacks
+	for _, cb := range c.consumerCallbacks {
+		cb(nil, err)
+	}
 }
 
 func sendKey(pid, seq uint64) string {

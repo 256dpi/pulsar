@@ -47,9 +47,10 @@ func TestClientCreateProducer(t *testing.T) {
 	var pid uint64
 	var seq uint64
 	done1 := make(chan struct{})
-	err = client.CreateProducer("test", "test", func(id uint64, lastSeq int64, err error) {
+	err = client.CreateProducer("test", "test", func(id uint64, name string, lastSeq int64, err error) {
 		assert.NoError(t, err)
 		assert.Equal(t, uint64(0), id)
+		assert.Equal(t, "test", name)
 		assert.Equal(t, int64(-1), lastSeq)
 
 		pid = id
@@ -58,6 +59,9 @@ func TestClientCreateProducer(t *testing.T) {
 		}
 
 		close(done1)
+	}, func(closed bool, cbErr error) {
+		assert.NoError(t, err)
+		assert.False(t, closed)
 	})
 	assert.NoError(t, err)
 
@@ -127,9 +131,10 @@ func TestClientConsumerAndProducer(t *testing.T) {
 	var seq uint64
 
 	done1 := make(chan struct{})
-	err = client.CreateProducer("test", "test", func(id uint64, lastSeq int64, err error) {
+	err = client.CreateProducer("test", "test", func(id uint64, name string, lastSeq int64, err error) {
 		assert.NoError(t, err)
 		assert.Equal(t, uint64(0), id)
+		assert.Equal(t, "test", name)
 		assert.Equal(t, int64(-1), lastSeq)
 
 		pid = id
@@ -138,6 +143,9 @@ func TestClientConsumerAndProducer(t *testing.T) {
 		}
 
 		close(done1)
+	}, func(closed bool, cbErr error) {
+		assert.NoError(t, err)
+		assert.False(t, closed)
 	})
 	assert.NoError(t, err)
 
