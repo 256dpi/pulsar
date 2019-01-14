@@ -34,7 +34,7 @@ type Ack struct {
 
 // Type will return the frame type.
 func (a *Ack) Type() Type {
-	return ACK
+	return AckFrame
 }
 
 // Encode will encode the frame and return its components.

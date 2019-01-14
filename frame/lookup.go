@@ -27,7 +27,7 @@ type Lookup struct {
 
 // Type will return the frame type.
 func (l *Lookup) Type() Type {
-	return LOOKUP
+	return LookupFrame
 }
 
 // Encode will encode the frame and return its components.
@@ -93,7 +93,7 @@ type LookupResponse struct {
 
 // Type will return the frame type.
 func (r *LookupResponse) Type() Type {
-	return LOOKUP_RESPONSE
+	return LookupResponseFrame
 }
 
 // Error implements the error interface.

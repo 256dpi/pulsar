@@ -18,7 +18,7 @@ type CloseProducer struct {
 
 // Type will return the frame type.
 func (p *CloseProducer) Type() Type {
-	return CLOSE_PRODUCER
+	return CloseProducerFrame
 }
 
 // Encode will encode the frame and return its components.
@@ -60,7 +60,7 @@ type CloseConsumer struct {
 
 // Type will return the frame type.
 func (c *CloseConsumer) Type() Type {
-	return CLOSE_CONSUMER
+	return CloseConsumerFrame
 }
 
 // Encode will encode the frame and return its components.

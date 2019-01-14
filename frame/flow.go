@@ -17,7 +17,7 @@ type Flow struct {
 
 // Type will return the frame type.
 func (f *Flow) Type() Type {
-	return FLOW
+	return FlowFrame
 }
 
 // Encode will encode the frame and return its components.

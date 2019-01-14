@@ -27,7 +27,7 @@ type Producer struct {
 
 // Type will return the frame type.
 func (p *Producer) Type() Type {
-	return PRODUCER
+	return ProducerFrame
 }
 
 // Encode will encode the frame and return its components.
@@ -64,7 +64,7 @@ type ProducerSuccess struct {
 
 // Type will return the frame type.
 func (s *ProducerSuccess) Type() Type {
-	return PRODUCER_SUCCESS
+	return ProducerSuccessFrame
 }
 
 // Decode will construct the frame from the specified components.

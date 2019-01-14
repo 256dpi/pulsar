@@ -24,7 +24,7 @@ type Send struct {
 
 // Type will return the frame type.
 func (s *Send) Type() Type {
-	return SEND
+	return SendFrame
 }
 
 // Encode will encode the frame and return its components.
@@ -63,7 +63,7 @@ type SendReceipt struct {
 
 // Type will return the frame type.
 func (r *SendReceipt) Type() Type {
-	return SEND_RECEIPT
+	return SendReceiptFrame
 }
 
 // Decode will construct the frame from the specified components.
@@ -93,7 +93,7 @@ type SendError struct {
 
 // Type will return the frame type.
 func (e *SendError) Type() Type {
-	return SEND_ERROR
+	return SendErrorFrame
 }
 
 // Error implements the error interface.

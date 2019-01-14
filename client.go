@@ -533,75 +533,75 @@ func (c *Client) receiver() {
 func (c *Client) handleFrame(f frame.Frame) error {
 	// handle frame
 	switch f.Type() {
-	case frame.CONNECT:
+	case frame.ConnectFrame:
 		// not implemented
-	case frame.CONNECTED:
+	case frame.ConnectedFrame:
 		// not implemented
-	case frame.SUBSCRIBE:
+	case frame.SubscribeFrame:
 		// not implemented
-	case frame.PRODUCER:
+	case frame.ProducerFrame:
 		// not implemented
-	case frame.SEND:
+	case frame.SendFrame:
 		// not implemented
-	case frame.SEND_RECEIPT:
+	case frame.SendReceiptFrame:
 		sr := f.(*frame.SendReceipt)
 		c.handleSendResponse(sr.PID, sr.Sequence, f)
-	case frame.SEND_ERROR:
+	case frame.SendErrorFrame:
 		se := f.(*frame.SendError)
 		c.handleSendResponse(se.PID, se.Sequence, f)
-	case frame.MESSAGE:
+	case frame.MessageFrame:
 		c.handleConsumerResponse(f.(*frame.Message).CID, f)
-	case frame.ACK:
+	case frame.AckFrame:
 		// not implemented
-	case frame.FLOW:
+	case frame.FlowFrame:
 		// not implemented
-	case frame.UNSUBSCRIBE:
+	case frame.UnsubscribeFrame:
 		// not implemented
-	case frame.SUCCESS:
+	case frame.SuccessFrame:
 		c.handleRequestResponse(f.(*frame.Success).RID, f)
-	case frame.ERROR:
+	case frame.ErrorFrame:
 		c.handleRequestResponse(f.(*frame.Error).RID, f)
-	case frame.CLOSE_PRODUCER:
+	case frame.CloseProducerFrame:
 		c.handleProducerResponse(f.(*frame.CloseProducer).PID, f)
-	case frame.CLOSE_CONSUMER:
+	case frame.CloseConsumerFrame:
 		c.handleConsumerResponse(f.(*frame.CloseConsumer).CID, f)
-	case frame.PRODUCER_SUCCESS:
+	case frame.ProducerSuccessFrame:
 		c.handleRequestResponse(f.(*frame.ProducerSuccess).RID, f)
-	case frame.PING:
+	case frame.PingFrame:
 		return c.handlePing()
-	case frame.PONG:
+	case frame.PongFrame:
 		// not implemented
-	case frame.REDELIVER_UNACKNOWLEDGED_MESSAGES:
+	case frame.RedeliverUnacknowledgedMessagesFrame:
 		// not implemented
-	case frame.PARTITIONED_METADATA:
+	case frame.PartitionedMetadataFrame:
 		// not implemented
-	case frame.PARTITIONED_METADATA_RESPONSE:
+	case frame.PartitionedMetadataResponseFrame:
 		// TODO: Implement.
-	case frame.LOOKUP:
+	case frame.LookupFrame:
 		// not implemented
-	case frame.LOOKUP_RESPONSE:
+	case frame.LookupResponseFrame:
 		c.handleRequestResponse(f.(*frame.LookupResponse).RID, f)
-	case frame.CONSUMER_STATS:
+	case frame.ConsumerStatsFrame:
 		// not implemented
-	case frame.CONSUMER_STATS_RESPONSE:
+	case frame.ConsumerStatsResponseFrame:
 		// TODO: Implement.
-	case frame.REACHED_END_OF_TOPIC:
+	case frame.ReachedEndOfTopicFrame:
 		// TODO: Implement.
-	case frame.SEEK:
+	case frame.SeekFrame:
 		// not implemented
-	case frame.GET_LAST_MESSAGE_ID:
+	case frame.GetLastMessageIDFrame:
 		// not implemented
-	case frame.GET_LAST_MESSAGE_ID_RESPONSE:
+	case frame.GetLastMessageIDResponseFrame:
 		// TODO: Implement.
-	case frame.ACTIVE_CONSUMER_CHANGE:
+	case frame.ActiveConsumerChangeFrame:
 		// TODO: Implement.
-	case frame.GET_TOPICS_OF_NAMESPACE:
+	case frame.GetTopicsOfNamespaceFrame:
 		// not implemented
-	case frame.GET_TOPICS_OF_NAMESPACE_RESPONSE:
+	case frame.GetTopicsOfNamespaceResponseFrame:
 		// TODO: Implement.
-	case frame.GET_SCHEMA:
+	case frame.GetSchemaFrame:
 		// not implemented
-	case frame.GET_SCHEMA_RESPONSE:
+	case frame.GetSchemaResponseFrame:
 		// TODO: Implement.
 	}
 

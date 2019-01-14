@@ -72,7 +72,7 @@ type Subscribe struct {
 
 // Type will return the frame type.
 func (s *Subscribe) Type() Type {
-	return SUBSCRIBE
+	return SubscribeFrame
 }
 
 // Encode will encode the frame and return its components.

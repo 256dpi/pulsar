@@ -17,7 +17,7 @@ type Unsubscribe struct {
 
 // Type will return the frame type.
 func (u *Unsubscribe) Type() Type {
-	return UNSUBSCRIBE
+	return UnsubscribeFrame
 }
 
 // Encode will encode the frame and return its components.

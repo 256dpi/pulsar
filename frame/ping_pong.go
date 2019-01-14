@@ -7,7 +7,7 @@ type Ping struct{}
 
 // Type will return the frame type.
 func (p *Ping) Type() Type {
-	return PING
+	return PingFrame
 }
 
 // Decode will construct the frame from the specified components.
@@ -31,7 +31,7 @@ type Pong struct{}
 
 // Type will return the frame type.
 func (p *Pong) Type() Type {
-	return PONG
+	return PongFrame
 }
 
 // Decode will construct the frame from the specified components.

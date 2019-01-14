@@ -10,7 +10,7 @@ type Success struct {
 
 // Type will return the frame type.
 func (s *Success) Type() Type {
-	return SUCCESS
+	return SuccessFrame
 }
 
 // Decode will construct the frame from the specified components.

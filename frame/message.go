@@ -22,7 +22,7 @@ type Message struct {
 
 // Type will return the frame type.
 func (m *Message) Type() Type {
-	return MESSAGE
+	return MessageFrame
 }
 
 // Decode will construct the frame from the specified components.

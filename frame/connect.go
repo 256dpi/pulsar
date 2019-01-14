@@ -25,7 +25,7 @@ type Connect struct {
 
 // Type will return the frame type.
 func (c *Connect) Type() Type {
-	return CONNECT
+	return ConnectFrame
 }
 
 // Encode will encode the frame and return its components.
@@ -60,7 +60,7 @@ type Connected struct {
 
 // Type will return the frame type.
 func (c *Connected) Type() Type {
-	return CONNECTED
+	return ConnectedFrame
 }
 
 // Decode will construct the frame from the specified components.

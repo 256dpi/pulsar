@@ -20,7 +20,7 @@ type Error struct {
 
 // Type will return the frame type.
 func (e *Error) Type() Type {
-	return ERROR
+	return ErrorFrame
 }
 
 // Error implements the error interface.
