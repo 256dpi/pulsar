@@ -292,7 +292,9 @@ func (c *Client) CloseProducer(pid uint64, rcb func(error)) error {
 			}
 
 			// remove producer callback
-			delete(c.producerCallbacks, pid) // TODO: Lock mutex?
+			c.mutex.Lock()
+			delete(c.producerCallbacks, pid)
+			c.mutex.Unlock()
 
 			// call callback
 			rcb(nil)
@@ -323,15 +325,14 @@ func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionT
 
 	// create subscribe frame
 	subscribe := &frame.Subscribe{
-		RID:          rid,
-		CID:          cid,
-		Name:         name,
-		Topic:        topic,
-		Subscription: sub,
-		SubType:      typ,
-		Durable:      durable,
-		//StartMessageID
-		//InitialPosition
+		RID:             rid,
+		CID:             cid,
+		Name:            name,
+		Topic:           topic,
+		Subscription:    sub,
+		SubType:         typ,
+		Durable:         durable,
+		InitialPosition: frame.Latest,
 	}
 
 	// store request callback
@@ -473,7 +474,9 @@ func (c *Client) CloseConsumer(cid uint64, rcb func(error)) error {
 			}
 
 			// remove consumer callback
-			delete(c.consumerCallbacks, cid) // TODO: Lock mutex?
+			c.mutex.Lock()
+			delete(c.consumerCallbacks, cid)
+			c.mutex.Unlock()
 
 			// call callback
 			rcb(nil)
