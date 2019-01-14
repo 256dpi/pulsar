@@ -62,7 +62,7 @@ func Connect(config ClientConfig) (*Client, error) {
 
 	// check for error frame
 	if _error, ok := in.(*frame.Error); ok {
-		return nil, fmt.Errorf("connection denied: %s, %s", _error.Error, _error.Message)
+		return nil, _error
 	}
 
 	// get connected frame
@@ -179,7 +179,7 @@ func (c *Client) CreateProducer(name, topic string, rcb func(uint64, int64, erro
 
 			// check for error frame
 			if _error, ok := res.(*frame.Error); ok {
-				rcb(0, 0, fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message))
+				rcb(0, 0, _error)
 				return
 			}
 
@@ -238,7 +238,7 @@ func (c *Client) Send(pid, seq uint64, msg []byte, scb func(error)) error {
 
 			// check for error frame
 			if _error, ok := res.(*frame.Error); ok {
-				scb(fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message))
+				scb(_error)
 				return
 			}
 
@@ -288,7 +288,7 @@ func (c *Client) CloseProducer(pid uint64, rcb func(error)) error {
 
 			// check for error frame
 			if _error, ok := res.(*frame.Error); ok {
-				rcb(fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message))
+				rcb(_error)
 				return
 			}
 
@@ -350,7 +350,7 @@ func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionT
 
 			// check for error frame
 			if _error, ok := res.(*frame.Error); ok {
-				rcb(0, fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message))
+				rcb(0, _error)
 				return
 			}
 
@@ -460,7 +460,7 @@ func (c *Client) CloseConsumer(cid uint64, rcb func(error)) error {
 
 			// check for error frame
 			if _error, ok := res.(*frame.Error); ok {
-				rcb(fmt.Errorf("error receied: %s, %s", _error.Error, _error.Message))
+				rcb(_error)
 				return
 			}
 
