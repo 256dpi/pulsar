@@ -45,8 +45,8 @@ func Dial(addr string) (*Conn, error) {
 	}
 
 	// check scheme
-	if loc.Scheme != "pulsar:" {
-		return nil, fmt.Errorf("address scheme is not 'pulsar:'")
+	if loc.Scheme != "pulsar" {
+		return nil, fmt.Errorf("address scheme is not 'pulsar'")
 	}
 
 	// split host port

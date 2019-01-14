@@ -13,11 +13,12 @@ var protocolVersion = int32(pb.ProtocolVersion_v13)
 
 // Connect is sent to the broker to initiate a connection.
 type Connect struct {
-	// The identifier set by the client.
+	// The client version identifier set by the client.
 	ClientVersion string
 
-	// The URL of the broker that the client should be proxied to.
-	ProxyBrokerURL string
+	// The URL of the broker that the client should be connected to if a proxy
+	// is used.
+	ProxyTargetBrokerURL string
 
 	// TODO: Support auth methods and data.
 	// TODO: Support for original principal and auth.
@@ -39,8 +40,8 @@ func (c *Connect) Encode() (*pb.BaseCommand, error) {
 	connect.ProtocolVersion = &protocolVersion
 
 	// set proxy url if available
-	if c.ProxyBrokerURL != "" {
-		connect.ProxyToBrokerUrl = proto.String(c.ProxyBrokerURL)
+	if c.ProxyTargetBrokerURL != "" {
+		connect.ProxyToBrokerUrl = proto.String(c.ProxyTargetBrokerURL)
 	}
 
 	// prepare base command

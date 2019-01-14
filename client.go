@@ -7,6 +7,20 @@ import (
 	"github.com/256dpi/pulsar/frame"
 )
 
+// ClientConfig defines basic settings to establish a connection with a Pulsar
+// broker.
+type ClientConfig struct {
+	// The URL of the Pulsar broker that the client will connect to.
+	PhysicalBrokerURL string
+
+	// The URL of the target Pulsar broker when the physical URL points to a
+	// Pulsar proxy that forwards the connection to the logical broker.
+	LogicalBrokerURL string
+
+	// The submitted client version identifier.
+	ClientVersion string
+}
+
 // Client is the low level client that exchanges frames with the pulsar broker.
 type Client struct {
 	conn *Conn
@@ -24,17 +38,17 @@ type Client struct {
 }
 
 // Connect will connect to the provided broker and return a client.
-func Connect(url, proxyURL, version string) (*Client, error) {
+func Connect(cfg ClientConfig) (*Client, error) {
 	// create connection
-	conn, err := Dial(url)
+	conn, err := Dial(cfg.PhysicalBrokerURL)
 	if err != nil {
 		return nil, err
 	}
 
 	// create connect frame
 	connect := &frame.Connect{
-		ClientVersion:  version,
-		ProxyBrokerURL: proxyURL,
+		ClientVersion:        cfg.ClientVersion,
+		ProxyTargetBrokerURL: cfg.LogicalBrokerURL,
 	}
 
 	// send connect frame

@@ -9,7 +9,7 @@ import (
 )
 
 func TestConnect(t *testing.T) {
-	client, err := Connect("", "", "")
+	client, err := Connect(ClientConfig{})
 	assert.NoError(t, err)
 
 	err = client.Close()
@@ -17,17 +17,17 @@ func TestConnect(t *testing.T) {
 }
 
 func TestClientLookup(t *testing.T) {
-	client, err := Connect("", "", "")
+	client, err := Connect(ClientConfig{})
 	assert.NoError(t, err)
 
 	done := make(chan struct{})
 	err = client.Lookup("test", false, func(res *frame.LookupResponse, err error) {
 		assert.NoError(t, err)
 		assert.Equal(t, &frame.LookupResponse{
-			BrokerURL:             "pulsar://Odin.local:6650",
-			ResponseType:          frame.Final,
-			Authoritative:         true,
-			ProxyThroughBrokerURL: true,
+			BrokerURL:              "pulsar://Odin.local:6650",
+			ResponseType:           frame.Final,
+			Authoritative:          true,
+			ProxyThroughServiceURL: true,
 		}, res)
 
 		close(done)
@@ -41,7 +41,7 @@ func TestClientLookup(t *testing.T) {
 }
 
 func TestClientCreateProducer(t *testing.T) {
-	client, err := Connect("", "", "")
+	client, err := Connect(ClientConfig{})
 	assert.NoError(t, err)
 
 	var pid uint64
@@ -88,7 +88,7 @@ func TestClientCreateProducer(t *testing.T) {
 }
 
 func TestClientCreateConsumer(t *testing.T) {
-	client, err := Connect("", "", "")
+	client, err := Connect(ClientConfig{})
 	assert.NoError(t, err)
 
 	var cid uint64
@@ -120,7 +120,7 @@ func TestClientCreateConsumer(t *testing.T) {
 }
 
 func TestClientConsumerAndProducer(t *testing.T) {
-	client, err := Connect("", "", "")
+	client, err := Connect(ClientConfig{})
 	assert.NoError(t, err)
 
 	var pid uint64

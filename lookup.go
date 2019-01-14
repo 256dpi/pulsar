@@ -31,41 +31,50 @@ var lookupMutex sync.Mutex
 var lookupClientCache = cache.New(lookupCacheTimeout, lookupCacheTimeout)
 
 // Lookup will lookup the provided topic by sending and initial request to the
-// specified broker. Redirects are followed until a final response has been
-// received.
-//
-// Created clients are cached for up to a minute.
-func Lookup(url, topic string) (*frame.LookupResponse, int, error) {
+// specified broker service URL. Redirects are followed until a final response
+// has been received.
+func Lookup(serviceURL, topic string) (ClientConfig, int, error) {
 	lookupMutex.Lock()
 	defer lookupMutex.Unlock()
 
+	// prepare config
+	config := ClientConfig{}
+
 	// perform initial lookup
-	res, err := singleLookup(url, topic, false)
+	lr, err := singleLookup(serviceURL, topic, false)
 	if err != nil {
-		return nil, 0, err
+		return config, 0, err
 	}
 
 	// prepare redirect counter
 	redirects := 0
 
 	// redirect until final response
-	for res.ResponseType == frame.Redirect {
+	for lr.ResponseType == frame.Redirect {
 		// check counter
 		if redirects >= LookupRedirectLimit {
-			return nil, redirects, ErrLookupRedirectLimit
+			return config, redirects, ErrLookupRedirectLimit
 		}
 
 		// perform lookup
-		res, err = singleLookup(res.BrokerURL, topic, res.Authoritative)
+		lr, err = singleLookup(lr.BrokerURL, topic, lr.Authoritative)
 		if err != nil {
-			return nil, redirects, err
+			return config, redirects, err
 		}
 
 		// increment
 		redirects++
 	}
 
-	return res, redirects, nil
+	// check if proxy is requested
+	if lr.ProxyThroughServiceURL {
+		config.PhysicalBrokerURL = serviceURL
+		config.LogicalBrokerURL = lr.BrokerURL
+	} else {
+		config.PhysicalBrokerURL = lr.BrokerURL
+	}
+
+	return config, redirects, nil
 }
 
 func singleLookup(url, topic string, authoritative bool) (*frame.LookupResponse, error) {
@@ -75,10 +84,15 @@ func singleLookup(url, topic string, authoritative bool) (*frame.LookupResponse,
 	// coerce value
 	client, ok := value.(*Client)
 
+	// prepare config
+	config := ClientConfig{
+		PhysicalBrokerURL: url,
+	}
+
 	// create new client if not available
 	if !ok {
 		// create a new client
-		newClient, err := Connect(url, "", "")
+		newClient, err := Connect(config)
 		if err != nil {
 			return nil, err
 		}

@@ -13,7 +13,7 @@ type Lookup struct {
 	// The request id.
 	RID uint64
 
-	// The topic too lookup.
+	// The topic to lookup.
 	Topic string
 
 	// The authoritative flag.
@@ -70,16 +70,14 @@ type LookupResponse struct {
 	// The response type.
 	ResponseType LookupResponseType
 
-	// The insecure connection URL.
+	// The URL of the broker serving the topic.
 	BrokerURL string
 
-	// The authoritative flag.
-	//
-	// Should be forwarded when following a redirect.
+	// The authoritative flag that should be forwarded when following a redirect.
 	Authoritative bool
 
-	// If set the client should proxy through the provided broker URL.
-	ProxyThroughBrokerURL bool
+	// If set the client should proxy through the service URL.
+	ProxyThroughServiceURL bool
 
 	// The error if failed
 	ErrorCode string
@@ -111,7 +109,7 @@ func (r *LookupResponse) Decode(bc *pb.BaseCommand) error {
 	r.ResponseType = LookupResponseType(bc.LookupTopicResponse.GetResponse())
 	r.BrokerURL = bc.LookupTopicResponse.GetBrokerServiceUrl()
 	r.Authoritative = bc.LookupTopicResponse.GetAuthoritative()
-	r.ProxyThroughBrokerURL = bc.LookupTopicResponse.GetProxyThroughServiceUrl()
+	r.ProxyThroughServiceURL = bc.LookupTopicResponse.GetProxyThroughServiceUrl()
 
 	// read error info if failed
 	if r.ResponseType == Failed {
