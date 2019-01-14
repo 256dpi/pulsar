@@ -1,7 +1,7 @@
 package frame
 
 import (
-	"github.com/256dpi/pulsar/pb"
+	"github.com/256dpi/pulsar/api"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -11,10 +11,10 @@ type AckType int
 
 const (
 	// Individual will acknowledge the single specified message.
-	Individual = AckType(pb.CommandAck_Individual)
+	Individual = AckType(api.CommandAck_Individual)
 
 	// Cumulative will acknowledge all messages including the specified message.
-	Cumulative = AckType(pb.CommandAck_Cumulative)
+	Cumulative = AckType(api.CommandAck_Cumulative)
 )
 
 // Ack is the frame sent to acknowledge a received message.
@@ -38,15 +38,15 @@ func (a *Ack) Type() Type {
 }
 
 // Encode will encode the frame and return its components.
-func (a *Ack) Encode() (*pb.BaseCommand, error) {
+func (a *Ack) Encode() (*api.BaseCommand, error) {
 	// prepare ack type
-	ackType := pb.CommandAck_AckType(a.AckType)
+	ackType := api.CommandAck_AckType(a.AckType)
 
 	// prepare ack command
-	ack := &pb.CommandAck{}
+	ack := &api.CommandAck{}
 	ack.ConsumerId = proto.Uint64(a.CID)
 	ack.AckType = &ackType
-	ack.MessageId = make([]*pb.MessageIdData, 0, len(a.MessagedIDs))
+	ack.MessageId = make([]*api.MessageIdData, 0, len(a.MessagedIDs))
 
 	// add message ids
 	for _, mid := range a.MessagedIDs {
@@ -54,8 +54,8 @@ func (a *Ack) Encode() (*pb.BaseCommand, error) {
 	}
 
 	// prepare base command
-	base := &pb.BaseCommand{
-		Type: getType(pb.BaseCommand_ACK),
+	base := &api.BaseCommand{
+		Type: getType(api.BaseCommand_ACK),
 		Ack:  ack,
 	}
 

@@ -3,7 +3,7 @@ package frame
 import (
 	"fmt"
 
-	"github.com/256dpi/pulsar/pb"
+	"github.com/256dpi/pulsar/api"
 )
 
 // Error is received from the broker when a request failed.
@@ -33,10 +33,10 @@ func (e *Error) Error() string {
 }
 
 // Decode will construct the frame from the specified components.
-func (e *Error) Decode(bc *pb.BaseCommand) error {
+func (e *Error) Decode(bc *api.BaseCommand) error {
 	// set fields
 	e.RID = bc.Error.GetRequestId()
-	e.Code = pb.ServerError_name[int32(bc.Error.GetError())]
+	e.Code = api.ServerError_name[int32(bc.Error.GetError())]
 	e.Message = bc.SendError.GetMessage()
 
 	return nil

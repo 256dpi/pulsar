@@ -1,6 +1,6 @@
 package frame
 
-import "github.com/256dpi/pulsar/pb"
+import "github.com/256dpi/pulsar/api"
 
 // Ping is a ping message sent by the broker.
 type Ping struct{}
@@ -11,16 +11,16 @@ func (p *Ping) Type() Type {
 }
 
 // Decode will construct the frame from the specified components.
-func (p *Ping) Decode(bc *pb.BaseCommand) error {
+func (p *Ping) Decode(bc *api.BaseCommand) error {
 	return nil
 }
 
 // Encode will encode the frame and return its components.
-func (p *Ping) Encode() (*pb.BaseCommand, error) {
+func (p *Ping) Encode() (*api.BaseCommand, error) {
 	// prepare base command
-	base := &pb.BaseCommand{
-		Type: getType(pb.BaseCommand_PING),
-		Ping: &pb.CommandPing{},
+	base := &api.BaseCommand{
+		Type: getType(api.BaseCommand_PING),
+		Ping: &api.CommandPing{},
 	}
 
 	return base, nil
@@ -35,16 +35,16 @@ func (p *Pong) Type() Type {
 }
 
 // Decode will construct the frame from the specified components.
-func (p *Pong) Decode(bc *pb.BaseCommand) error {
+func (p *Pong) Decode(bc *api.BaseCommand) error {
 	return nil
 }
 
 // Encode will encode the frame and return its components.
-func (p *Pong) Encode() (*pb.BaseCommand, error) {
+func (p *Pong) Encode() (*api.BaseCommand, error) {
 	// prepare base command
-	base := &pb.BaseCommand{
-		Type: getType(pb.BaseCommand_PONG),
-		Pong: &pb.CommandPong{},
+	base := &api.BaseCommand{
+		Type: getType(api.BaseCommand_PONG),
+		Pong: &api.CommandPong{},
 	}
 
 	return base, nil

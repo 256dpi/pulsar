@@ -1,7 +1,7 @@
 package frame
 
 import (
-	"github.com/256dpi/pulsar/pb"
+	"github.com/256dpi/pulsar/api"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -14,7 +14,7 @@ type MessageID struct {
 	BatchIndex int32
 }
 
-func decodeMessageID(mid *pb.MessageIdData) MessageID {
+func decodeMessageID(mid *api.MessageIdData) MessageID {
 	// check availability
 	if mid == nil {
 		return MessageID{}
@@ -28,8 +28,8 @@ func decodeMessageID(mid *pb.MessageIdData) MessageID {
 	}
 }
 
-func encodeMessageID(m MessageID) *pb.MessageIdData {
-	return &pb.MessageIdData{
+func encodeMessageID(m MessageID) *api.MessageIdData {
+	return &api.MessageIdData{
 		LedgerId:   proto.Uint64(m.LedgerID),
 		EntryId:    proto.Uint64(m.EntryID),
 		Partition:  proto.Int32(m.Partition),

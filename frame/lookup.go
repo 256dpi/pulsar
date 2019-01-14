@@ -3,7 +3,7 @@ package frame
 import (
 	"fmt"
 
-	"github.com/256dpi/pulsar/pb"
+	"github.com/256dpi/pulsar/api"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -31,16 +31,16 @@ func (l *Lookup) Type() Type {
 }
 
 // Encode will encode the frame and return its components.
-func (l *Lookup) Encode() (*pb.BaseCommand, error) {
+func (l *Lookup) Encode() (*api.BaseCommand, error) {
 	// prepare lookup command
-	lookup := &pb.CommandLookupTopic{}
+	lookup := &api.CommandLookupTopic{}
 	lookup.Topic = proto.String(l.Topic)
 	lookup.RequestId = proto.Uint64(l.RID)
 	lookup.Authoritative = proto.Bool(l.Authoritative)
 
 	// prepare base command
-	base := &pb.BaseCommand{
-		Type:        getType(pb.BaseCommand_LOOKUP),
+	base := &api.BaseCommand{
+		Type:        getType(api.BaseCommand_LOOKUP),
 		LookupTopic: lookup,
 	}
 
@@ -53,13 +53,13 @@ type LookupResponseType int
 const (
 	// Redirect instructs the client to redirect the lookup request to the
 	// provided broker.
-	Redirect = LookupResponseType(pb.CommandLookupTopicResponse_Redirect)
+	Redirect = LookupResponseType(api.CommandLookupTopicResponse_Redirect)
 
 	// Final instructs to connect to the provided broker.
-	Final = LookupResponseType(pb.CommandLookupTopicResponse_Connect)
+	Final = LookupResponseType(api.CommandLookupTopicResponse_Connect)
 
 	// Failed defines a failed lookup request.
-	Failed = LookupResponseType(pb.CommandLookupTopicResponse_Failed)
+	Failed = LookupResponseType(api.CommandLookupTopicResponse_Failed)
 )
 
 // LookupResponse is received as a response to the Lookup request.
@@ -103,7 +103,7 @@ func (r *LookupResponse) Error() string {
 }
 
 // Decode will construct the frame from the specified components.
-func (r *LookupResponse) Decode(bc *pb.BaseCommand) error {
+func (r *LookupResponse) Decode(bc *api.BaseCommand) error {
 	// set fields
 	r.RID = bc.LookupTopicResponse.GetRequestId()
 	r.ResponseType = LookupResponseType(bc.LookupTopicResponse.GetResponse())
@@ -113,7 +113,7 @@ func (r *LookupResponse) Decode(bc *pb.BaseCommand) error {
 
 	// read error info if failed
 	if r.ResponseType == Failed {
-		r.ErrorCode = pb.ServerError_name[int32(bc.LookupTopicResponse.GetError())]
+		r.ErrorCode = api.ServerError_name[int32(bc.LookupTopicResponse.GetError())]
 		r.ErrorMessage = bc.LookupTopicResponse.GetMessage()
 	}
 

@@ -1,6 +1,6 @@
 package frame
 
-import "github.com/256dpi/pulsar/pb"
+import "github.com/256dpi/pulsar/api"
 
 // Message is an incoming message received by a consumer.
 type Message struct {
@@ -26,7 +26,7 @@ func (m *Message) Type() Type {
 }
 
 // Decode will construct the frame from the specified components.
-func (m *Message) Decode(bc *pb.BaseCommand, md *pb.MessageMetadata, payload []byte) error {
+func (m *Message) Decode(bc *api.BaseCommand, md *api.MessageMetadata, payload []byte) error {
 	// set fields
 	m.CID = bc.Message.GetConsumerId()
 	m.MessageID = decodeMessageID(bc.Message.MessageId)

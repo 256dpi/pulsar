@@ -1,7 +1,7 @@
 package frame
 
 import (
-	"github.com/256dpi/pulsar/pb"
+	"github.com/256dpi/pulsar/api"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -12,14 +12,14 @@ type SubscriptionType int
 const (
 	// Exclusive subscriptions are only allowed to be subscribed by one client.
 	// Additional subscriptions will return an error.
-	Exclusive = SubscriptionType(pb.CommandSubscribe_Exclusive)
+	Exclusive = SubscriptionType(api.CommandSubscribe_Exclusive)
 
 	// Shared subscriptions allow messages to be distributed among the consumers.
-	Shared = SubscriptionType(pb.CommandSubscribe_Shared)
+	Shared = SubscriptionType(api.CommandSubscribe_Shared)
 
 	// Failover subscriptions allow additional consumers to take over when the
 	// active consumer fail.s
-	Failover = SubscriptionType(pb.CommandSubscribe_Failover)
+	Failover = SubscriptionType(api.CommandSubscribe_Failover)
 )
 
 // InitialPosition defines the initial position of a subscription.
@@ -27,10 +27,10 @@ type InitialPosition int
 
 const (
 	// Latest will begin consuming messages from the latest message.
-	Latest = InitialPosition(pb.CommandSubscribe_Latest)
+	Latest = InitialPosition(api.CommandSubscribe_Latest)
 
 	// Earliest will begin consuming messages from the earliest message.
-	Earliest = InitialPosition(pb.CommandSubscribe_Earliest)
+	Earliest = InitialPosition(api.CommandSubscribe_Earliest)
 )
 
 // Subscribe is sent to the broker to create a consumer.
@@ -76,13 +76,13 @@ func (s *Subscribe) Type() Type {
 }
 
 // Encode will encode the frame and return its components.
-func (s *Subscribe) Encode() (*pb.BaseCommand, error) {
+func (s *Subscribe) Encode() (*api.BaseCommand, error) {
 	// prepare sub type
-	subType := pb.CommandSubscribe_SubType(int32(s.SubType))
-	inPos := pb.CommandSubscribe_InitialPosition(int32(s.InitialPosition))
+	subType := api.CommandSubscribe_SubType(int32(s.SubType))
+	inPos := api.CommandSubscribe_InitialPosition(int32(s.InitialPosition))
 
 	// prepare subscribe command
-	subscribe := &pb.CommandSubscribe{
+	subscribe := &api.CommandSubscribe{
 		RequestId:       proto.Uint64(s.RID),
 		ConsumerId:      proto.Uint64(s.CID),
 		ConsumerName:    proto.String(s.Name),
@@ -94,8 +94,8 @@ func (s *Subscribe) Encode() (*pb.BaseCommand, error) {
 	}
 
 	// prepare base command
-	base := &pb.BaseCommand{
-		Type:      getType(pb.BaseCommand_SUBSCRIBE),
+	base := &api.BaseCommand{
+		Type:      getType(api.BaseCommand_SUBSCRIBE),
 		Subscribe: subscribe,
 	}
 

@@ -1,6 +1,6 @@
 package frame
 
-import "github.com/256dpi/pulsar/pb"
+import "github.com/256dpi/pulsar/api"
 
 // Success is sent by the broker to acknowledge requests.
 type Success struct {
@@ -14,7 +14,7 @@ func (s *Success) Type() Type {
 }
 
 // Decode will construct the frame from the specified components.
-func (s *Success) Decode(bc *pb.BaseCommand) error {
+func (s *Success) Decode(bc *api.BaseCommand) error {
 	// set fields
 	s.RID = bc.Success.GetRequestId()
 

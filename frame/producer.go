@@ -1,7 +1,7 @@
 package frame
 
 import (
-	"github.com/256dpi/pulsar/pb"
+	"github.com/256dpi/pulsar/api"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -31,17 +31,17 @@ func (p *Producer) Type() Type {
 }
 
 // Encode will encode the frame and return its components.
-func (p *Producer) Encode() (*pb.BaseCommand, error) {
+func (p *Producer) Encode() (*api.BaseCommand, error) {
 	// prepare producer command
-	producer := &pb.CommandProducer{}
+	producer := &api.CommandProducer{}
 	producer.Topic = proto.String(p.Topic)
 	producer.ProducerId = proto.Uint64(p.PID)
 	producer.RequestId = proto.Uint64(p.RID)
 	producer.ProducerName = proto.String(p.Name)
 
 	// prepare base command
-	base := &pb.BaseCommand{
-		Type:     getType(pb.BaseCommand_PRODUCER),
+	base := &api.BaseCommand{
+		Type:     getType(api.BaseCommand_PRODUCER),
 		Producer: producer,
 	}
 
@@ -68,7 +68,7 @@ func (s *ProducerSuccess) Type() Type {
 }
 
 // Decode will construct the frame from the specified components.
-func (s *ProducerSuccess) Decode(bc *pb.BaseCommand) error {
+func (s *ProducerSuccess) Decode(bc *api.BaseCommand) error {
 	// set fields
 	s.RID = bc.ProducerSuccess.GetRequestId()
 	s.Name = bc.ProducerSuccess.GetProducerName()

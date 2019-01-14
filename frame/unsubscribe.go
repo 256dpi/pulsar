@@ -1,7 +1,7 @@
 package frame
 
 import (
-	"github.com/256dpi/pulsar/pb"
+	"github.com/256dpi/pulsar/api"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -21,16 +21,16 @@ func (u *Unsubscribe) Type() Type {
 }
 
 // Encode will encode the frame and return its components.
-func (u *Unsubscribe) Encode() (*pb.BaseCommand, error) {
+func (u *Unsubscribe) Encode() (*api.BaseCommand, error) {
 	// prepare unsubscribe command
-	unsubscribe := &pb.CommandUnsubscribe{
+	unsubscribe := &api.CommandUnsubscribe{
 		RequestId:  proto.Uint64(u.RID),
 		ConsumerId: proto.Uint64(u.CID),
 	}
 
 	// prepare base command
-	base := &pb.BaseCommand{
-		Type:        getType(pb.BaseCommand_UNSUBSCRIBE),
+	base := &api.BaseCommand{
+		Type:        getType(api.BaseCommand_UNSUBSCRIBE),
 		Unsubscribe: unsubscribe,
 	}
 

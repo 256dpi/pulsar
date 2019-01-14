@@ -7,7 +7,7 @@ import (
 	"hash/crc32"
 	"io"
 
-	"github.com/256dpi/pulsar/pb"
+	"github.com/256dpi/pulsar/api"
 )
 
 var magicByte = []byte{0x0e, 0x01}
@@ -19,40 +19,40 @@ type Type int
 
 // All available frame types.
 const (
-	ConnectFrame                         = Type(pb.BaseCommand_CONNECT)
-	ConnectedFrame                       = Type(pb.BaseCommand_CONNECTED)
-	SubscribeFrame                       = Type(pb.BaseCommand_SUBSCRIBE)
-	ProducerFrame                        = Type(pb.BaseCommand_PRODUCER)
-	SendFrame                            = Type(pb.BaseCommand_SEND)
-	SendReceiptFrame                     = Type(pb.BaseCommand_SEND_RECEIPT)
-	SendErrorFrame                       = Type(pb.BaseCommand_SEND_ERROR)
-	MessageFrame                         = Type(pb.BaseCommand_MESSAGE)
-	AckFrame                             = Type(pb.BaseCommand_ACK)
-	FlowFrame                            = Type(pb.BaseCommand_FLOW)
-	UnsubscribeFrame                     = Type(pb.BaseCommand_UNSUBSCRIBE)
-	SuccessFrame                         = Type(pb.BaseCommand_SUCCESS)
-	ErrorFrame                           = Type(pb.BaseCommand_ERROR)
-	CloseProducerFrame                   = Type(pb.BaseCommand_CLOSE_PRODUCER)
-	CloseConsumerFrame                   = Type(pb.BaseCommand_CLOSE_CONSUMER)
-	ProducerSuccessFrame                 = Type(pb.BaseCommand_PRODUCER_SUCCESS)
-	PingFrame                            = Type(pb.BaseCommand_PING)
-	PongFrame                            = Type(pb.BaseCommand_PONG)
-	RedeliverUnacknowledgedMessagesFrame = Type(pb.BaseCommand_REDELIVER_UNACKNOWLEDGED_MESSAGES)
-	PartitionedMetadataFrame             = Type(pb.BaseCommand_PARTITIONED_METADATA)
-	PartitionedMetadataResponseFrame     = Type(pb.BaseCommand_PARTITIONED_METADATA_RESPONSE)
-	LookupFrame                          = Type(pb.BaseCommand_LOOKUP)
-	LookupResponseFrame                  = Type(pb.BaseCommand_LOOKUP_RESPONSE)
-	ConsumerStatsFrame                   = Type(pb.BaseCommand_CONSUMER_STATS)
-	ConsumerStatsResponseFrame           = Type(pb.BaseCommand_CONSUMER_STATS_RESPONSE)
-	ReachedEndOfTopicFrame               = Type(pb.BaseCommand_REACHED_END_OF_TOPIC)
-	SeekFrame                            = Type(pb.BaseCommand_SEEK)
-	GetLastMessageIDFrame                = Type(pb.BaseCommand_GET_LAST_MESSAGE_ID)
-	GetLastMessageIDResponseFrame        = Type(pb.BaseCommand_GET_LAST_MESSAGE_ID_RESPONSE)
-	ActiveConsumerChangeFrame            = Type(pb.BaseCommand_ACTIVE_CONSUMER_CHANGE)
-	GetTopicsOfNamespaceFrame            = Type(pb.BaseCommand_GET_TOPICS_OF_NAMESPACE)
-	GetTopicsOfNamespaceResponseFrame    = Type(pb.BaseCommand_GET_TOPICS_OF_NAMESPACE_RESPONSE)
-	GetSchemaFrame                       = Type(pb.BaseCommand_GET_SCHEMA)
-	GetSchemaResponseFrame               = Type(pb.BaseCommand_GET_SCHEMA_RESPONSE)
+	ConnectFrame                         = Type(api.BaseCommand_CONNECT)
+	ConnectedFrame                       = Type(api.BaseCommand_CONNECTED)
+	SubscribeFrame                       = Type(api.BaseCommand_SUBSCRIBE)
+	ProducerFrame                        = Type(api.BaseCommand_PRODUCER)
+	SendFrame                            = Type(api.BaseCommand_SEND)
+	SendReceiptFrame                     = Type(api.BaseCommand_SEND_RECEIPT)
+	SendErrorFrame                       = Type(api.BaseCommand_SEND_ERROR)
+	MessageFrame                         = Type(api.BaseCommand_MESSAGE)
+	AckFrame                             = Type(api.BaseCommand_ACK)
+	FlowFrame                            = Type(api.BaseCommand_FLOW)
+	UnsubscribeFrame                     = Type(api.BaseCommand_UNSUBSCRIBE)
+	SuccessFrame                         = Type(api.BaseCommand_SUCCESS)
+	ErrorFrame                           = Type(api.BaseCommand_ERROR)
+	CloseProducerFrame                   = Type(api.BaseCommand_CLOSE_PRODUCER)
+	CloseConsumerFrame                   = Type(api.BaseCommand_CLOSE_CONSUMER)
+	ProducerSuccessFrame                 = Type(api.BaseCommand_PRODUCER_SUCCESS)
+	PingFrame                            = Type(api.BaseCommand_PING)
+	PongFrame                            = Type(api.BaseCommand_PONG)
+	RedeliverUnacknowledgedMessagesFrame = Type(api.BaseCommand_REDELIVER_UNACKNOWLEDGED_MESSAGES)
+	PartitionedMetadataFrame             = Type(api.BaseCommand_PARTITIONED_METADATA)
+	PartitionedMetadataResponseFrame     = Type(api.BaseCommand_PARTITIONED_METADATA_RESPONSE)
+	LookupFrame                          = Type(api.BaseCommand_LOOKUP)
+	LookupResponseFrame                  = Type(api.BaseCommand_LOOKUP_RESPONSE)
+	ConsumerStatsFrame                   = Type(api.BaseCommand_CONSUMER_STATS)
+	ConsumerStatsResponseFrame           = Type(api.BaseCommand_CONSUMER_STATS_RESPONSE)
+	ReachedEndOfTopicFrame               = Type(api.BaseCommand_REACHED_END_OF_TOPIC)
+	SeekFrame                            = Type(api.BaseCommand_SEEK)
+	GetLastMessageIDFrame                = Type(api.BaseCommand_GET_LAST_MESSAGE_ID)
+	GetLastMessageIDResponseFrame        = Type(api.BaseCommand_GET_LAST_MESSAGE_ID_RESPONSE)
+	ActiveConsumerChangeFrame            = Type(api.BaseCommand_ACTIVE_CONSUMER_CHANGE)
+	GetTopicsOfNamespaceFrame            = Type(api.BaseCommand_GET_TOPICS_OF_NAMESPACE)
+	GetTopicsOfNamespaceResponseFrame    = Type(api.BaseCommand_GET_TOPICS_OF_NAMESPACE_RESPONSE)
+	GetSchemaFrame                       = Type(api.BaseCommand_GET_SCHEMA)
+	GetSchemaResponseFrame               = Type(api.BaseCommand_GET_SCHEMA_RESPONSE)
 )
 
 // Frame is generic frame exchanged with the pulsar broker.
@@ -64,25 +64,25 @@ type Frame interface {
 // SimpleDecoder decodes simple frames.
 type SimpleDecoder interface {
 	// Decode should construct the frame from the specified components.
-	Decode(*pb.BaseCommand) error
+	Decode(*api.BaseCommand) error
 }
 
 // SimpleEncoder encodes simple frames.
 type SimpleEncoder interface {
 	// Encode should encode the frame and return its components.
-	Encode() (*pb.BaseCommand, error)
+	Encode() (*api.BaseCommand, error)
 }
 
 // PayloadDecoder decodes frames with metadata and a payload.
 type PayloadDecoder interface {
 	// Decode should construct the frame from the specified components.
-	Decode(*pb.BaseCommand, *pb.MessageMetadata, []byte) error
+	Decode(*api.BaseCommand, *api.MessageMetadata, []byte) error
 }
 
 // PayloadEncoder encodes frames with metadata and a payload.
 type PayloadEncoder interface {
 	// Encode should encode the frame and return its components.
-	Encode() (*pb.BaseCommand, *pb.MessageMetadata, []byte, error)
+	Encode() (*api.BaseCommand, *api.MessageMetadata, []byte, error)
 }
 
 // Read will block and try to read a frame from the provided reader.
@@ -149,14 +149,14 @@ func Decode(data []byte) (Frame, error) {
 	commandBytes := data[4 : commandSize+4]
 
 	// decode command
-	base := &pb.BaseCommand{}
+	base := &api.BaseCommand{}
 	err := base.Unmarshal(commandBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	// prepare metadata and payload
-	var metadata *pb.MessageMetadata
+	var metadata *api.MessageMetadata
 	var payload []byte
 
 	// compute rest of frame
@@ -185,7 +185,7 @@ func Decode(data []byte) (Frame, error) {
 		metadataBytes := data[commandSize+4+2+4+4 : commandSize+4+2+4+4+metadataSize]
 
 		// decode metadata
-		metadata := &pb.MessageMetadata{}
+		metadata := &api.MessageMetadata{}
 		err = metadata.Unmarshal(metadataBytes)
 		if err != nil {
 			return nil, err
@@ -197,85 +197,85 @@ func Decode(data []byte) (Frame, error) {
 
 	// set command
 	switch base.GetType() {
-	case pb.BaseCommand_CONNECT:
+	case api.BaseCommand_CONNECT:
 		// not supported
-	case pb.BaseCommand_CONNECTED:
+	case api.BaseCommand_CONNECTED:
 		connected := &Connected{}
 		return connected, connected.Decode(base)
-	case pb.BaseCommand_SUBSCRIBE:
+	case api.BaseCommand_SUBSCRIBE:
 		// not supported
-	case pb.BaseCommand_PRODUCER:
+	case api.BaseCommand_PRODUCER:
 		// not supported
-	case pb.BaseCommand_SEND:
+	case api.BaseCommand_SEND:
 		// not supported
-	case pb.BaseCommand_SEND_RECEIPT:
+	case api.BaseCommand_SEND_RECEIPT:
 		sendReceipt := &SendReceipt{}
 		return sendReceipt, sendReceipt.Decode(base)
-	case pb.BaseCommand_SEND_ERROR:
+	case api.BaseCommand_SEND_ERROR:
 		sendError := &SendError{}
 		return sendError, sendError.Decode(base)
-	case pb.BaseCommand_MESSAGE:
+	case api.BaseCommand_MESSAGE:
 		message := &Message{}
 		return message, message.Decode(base, metadata, payload)
-	case pb.BaseCommand_ACK:
+	case api.BaseCommand_ACK:
 		// not supported
-	case pb.BaseCommand_FLOW:
+	case api.BaseCommand_FLOW:
 		// not supported
-	case pb.BaseCommand_UNSUBSCRIBE:
+	case api.BaseCommand_UNSUBSCRIBE:
 		// not supported
-	case pb.BaseCommand_SUCCESS:
+	case api.BaseCommand_SUCCESS:
 		success := &Success{}
 		return success, success.Decode(base)
-	case pb.BaseCommand_ERROR:
+	case api.BaseCommand_ERROR:
 		_error := &Error{}
 		return _error, _error.Decode(base)
-	case pb.BaseCommand_CLOSE_PRODUCER:
+	case api.BaseCommand_CLOSE_PRODUCER:
 		closeProducer := &CloseProducer{}
 		return closeProducer, closeProducer.Decode(base)
-	case pb.BaseCommand_CLOSE_CONSUMER:
+	case api.BaseCommand_CLOSE_CONSUMER:
 		closeConsumer := &CloseConsumer{}
 		return closeConsumer, closeConsumer.Decode(base)
-	case pb.BaseCommand_PRODUCER_SUCCESS:
+	case api.BaseCommand_PRODUCER_SUCCESS:
 		producerSuccess := &ProducerSuccess{}
 		return producerSuccess, producerSuccess.Decode(base)
-	case pb.BaseCommand_PING:
+	case api.BaseCommand_PING:
 		ping := &Ping{}
 		return ping, ping.Decode(base)
-	case pb.BaseCommand_PONG:
+	case api.BaseCommand_PONG:
 		pong := &Pong{}
 		return pong, pong.Decode(base)
-	case pb.BaseCommand_REDELIVER_UNACKNOWLEDGED_MESSAGES:
+	case api.BaseCommand_REDELIVER_UNACKNOWLEDGED_MESSAGES:
 		// not supported
-	case pb.BaseCommand_PARTITIONED_METADATA:
+	case api.BaseCommand_PARTITIONED_METADATA:
 		// not supported
-	case pb.BaseCommand_PARTITIONED_METADATA_RESPONSE:
+	case api.BaseCommand_PARTITIONED_METADATA_RESPONSE:
 		// TODO: Add support.
-	case pb.BaseCommand_LOOKUP:
+	case api.BaseCommand_LOOKUP:
 		// not supported
-	case pb.BaseCommand_LOOKUP_RESPONSE:
+	case api.BaseCommand_LOOKUP_RESPONSE:
 		lookupResponse := &LookupResponse{}
 		return lookupResponse, lookupResponse.Decode(base)
-	case pb.BaseCommand_CONSUMER_STATS:
+	case api.BaseCommand_CONSUMER_STATS:
 		// not supported
-	case pb.BaseCommand_CONSUMER_STATS_RESPONSE:
+	case api.BaseCommand_CONSUMER_STATS_RESPONSE:
 		// TODO: Add support.
-	case pb.BaseCommand_REACHED_END_OF_TOPIC:
+	case api.BaseCommand_REACHED_END_OF_TOPIC:
 		// TODO: Add support.
-	case pb.BaseCommand_SEEK:
+	case api.BaseCommand_SEEK:
 		// not supported
-	case pb.BaseCommand_GET_LAST_MESSAGE_ID:
+	case api.BaseCommand_GET_LAST_MESSAGE_ID:
 		// not supported
-	case pb.BaseCommand_GET_LAST_MESSAGE_ID_RESPONSE:
+	case api.BaseCommand_GET_LAST_MESSAGE_ID_RESPONSE:
 		// TODO: Add support.
-	case pb.BaseCommand_ACTIVE_CONSUMER_CHANGE:
+	case api.BaseCommand_ACTIVE_CONSUMER_CHANGE:
 		// TODO: Add support.
-	case pb.BaseCommand_GET_TOPICS_OF_NAMESPACE:
+	case api.BaseCommand_GET_TOPICS_OF_NAMESPACE:
 		// not supported
-	case pb.BaseCommand_GET_TOPICS_OF_NAMESPACE_RESPONSE:
+	case api.BaseCommand_GET_TOPICS_OF_NAMESPACE_RESPONSE:
 		// TODO: Add support.
-	case pb.BaseCommand_GET_SCHEMA:
+	case api.BaseCommand_GET_SCHEMA:
 		// not supported
-	case pb.BaseCommand_GET_SCHEMA_RESPONSE:
+	case api.BaseCommand_GET_SCHEMA_RESPONSE:
 		// TODO: Add support.
 	}
 
@@ -381,6 +381,6 @@ func Encode(frame Frame) ([]byte, error) {
 	return nil, fmt.Errorf("unable to encode frame")
 }
 
-func getType(t pb.BaseCommand_Type) *pb.BaseCommand_Type {
+func getType(t api.BaseCommand_Type) *api.BaseCommand_Type {
 	return &t
 }

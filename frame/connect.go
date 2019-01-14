@@ -3,13 +3,13 @@ package frame
 import (
 	"fmt"
 
-	"github.com/256dpi/pulsar/pb"
+	"github.com/256dpi/pulsar/api"
 
 	"github.com/golang/protobuf/proto"
 )
 
-var authMethodNone = pb.AuthMethod_AuthMethodNone
-var protocolVersion = int32(pb.ProtocolVersion_v13)
+var authMethodNone = api.AuthMethod_AuthMethodNone
+var protocolVersion = int32(api.ProtocolVersion_v13)
 
 // Connect is sent to the broker to initiate a connection.
 type Connect struct {
@@ -30,9 +30,9 @@ func (c *Connect) Type() Type {
 }
 
 // Encode will encode the frame and return its components.
-func (c *Connect) Encode() (*pb.BaseCommand, error) {
+func (c *Connect) Encode() (*api.BaseCommand, error) {
 	// prepare connect command
-	connect := &pb.CommandConnect{}
+	connect := &api.CommandConnect{}
 
 	// set fields
 	connect.ClientVersion = proto.String(c.ClientVersion)
@@ -45,8 +45,8 @@ func (c *Connect) Encode() (*pb.BaseCommand, error) {
 	}
 
 	// prepare base command
-	base := &pb.BaseCommand{
-		Type:    getType(pb.BaseCommand_CONNECT),
+	base := &api.BaseCommand{
+		Type:    getType(api.BaseCommand_CONNECT),
 		Connect: connect,
 	}
 
@@ -65,9 +65,9 @@ func (c *Connected) Type() Type {
 }
 
 // Decode will construct the frame from the specified components.
-func (c *Connected) Decode(bc *pb.BaseCommand) error {
+func (c *Connected) Decode(bc *api.BaseCommand) error {
 	// check protocol version
-	if bc.Connected.GetProtocolVersion() != int32(pb.ProtocolVersion_v13) {
+	if bc.Connected.GetProtocolVersion() != int32(api.ProtocolVersion_v13) {
 		return fmt.Errorf("only protocol version 13 is supported")
 	}
 

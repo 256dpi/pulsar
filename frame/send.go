@@ -2,7 +2,7 @@ package frame
 
 import (
 	"fmt"
-	"github.com/256dpi/pulsar/pb"
+	"github.com/256dpi/pulsar/api"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -28,17 +28,17 @@ func (s *Send) Type() Type {
 }
 
 // Encode will encode the frame and return its components.
-func (s *Send) Encode() (*pb.BaseCommand, *pb.MessageMetadata, []byte, error) {
+func (s *Send) Encode() (*api.BaseCommand, *api.MessageMetadata, []byte, error) {
 	// prepare send command
-	send := &pb.CommandSend{
+	send := &api.CommandSend{
 		ProducerId:  proto.Uint64(s.PID),
 		SequenceId:  proto.Uint64(s.Sequence),
 		NumMessages: proto.Int32(1),
 	}
 
 	// prepare base command
-	base := &pb.BaseCommand{
-		Type: getType(pb.BaseCommand_SEND),
+	base := &api.BaseCommand{
+		Type: getType(api.BaseCommand_SEND),
 		Send: send,
 	}
 
@@ -67,7 +67,7 @@ func (r *SendReceipt) Type() Type {
 }
 
 // Decode will construct the frame from the specified components.
-func (r *SendReceipt) Decode(bc *pb.BaseCommand) error {
+func (r *SendReceipt) Decode(bc *api.BaseCommand) error {
 	// set fields
 	r.PID = bc.SendReceipt.GetProducerId()
 	r.Sequence = bc.SendReceipt.GetSequenceId()
@@ -106,11 +106,11 @@ func (e *SendError) Error() string {
 }
 
 // Decode will construct the frame from the specified components.
-func (e *SendError) Decode(bc *pb.BaseCommand) error {
+func (e *SendError) Decode(bc *api.BaseCommand) error {
 	// set fields
 	e.PID = bc.SendError.GetProducerId()
 	e.Sequence = bc.SendError.GetSequenceId()
-	e.Code = pb.ServerError_name[int32(bc.SendError.GetError())]
+	e.Code = api.ServerError_name[int32(bc.SendError.GetError())]
 	e.Message = bc.SendError.GetMessage()
 
 	return nil

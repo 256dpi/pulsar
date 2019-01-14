@@ -1,7 +1,7 @@
 package frame
 
 import (
-	"github.com/256dpi/pulsar/pb"
+	"github.com/256dpi/pulsar/api"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -22,17 +22,17 @@ func (p *CloseProducer) Type() Type {
 }
 
 // Encode will encode the frame and return its components.
-func (p *CloseProducer) Encode() (*pb.BaseCommand, error) {
+func (p *CloseProducer) Encode() (*api.BaseCommand, error) {
 	// prepare close producer command
-	closeProducer := &pb.CommandCloseProducer{}
+	closeProducer := &api.CommandCloseProducer{}
 
 	// set fields
 	closeProducer.ProducerId = proto.Uint64(p.PID)
 	closeProducer.RequestId = proto.Uint64(p.RID)
 
 	// prepare base command
-	base := &pb.BaseCommand{
-		Type:          getType(pb.BaseCommand_CLOSE_PRODUCER),
+	base := &api.BaseCommand{
+		Type:          getType(api.BaseCommand_CLOSE_PRODUCER),
 		CloseProducer: closeProducer,
 	}
 
@@ -40,7 +40,7 @@ func (p *CloseProducer) Encode() (*pb.BaseCommand, error) {
 }
 
 // Decode will construct the frame from the specified components.
-func (p *CloseProducer) Decode(bc *pb.BaseCommand) error {
+func (p *CloseProducer) Decode(bc *api.BaseCommand) error {
 	// set fields
 	p.PID = bc.CloseProducer.GetProducerId()
 	p.RID = bc.CloseProducer.GetRequestId()
@@ -64,17 +64,17 @@ func (c *CloseConsumer) Type() Type {
 }
 
 // Encode will encode the frame and return its components.
-func (c *CloseConsumer) Encode() (*pb.BaseCommand, error) {
+func (c *CloseConsumer) Encode() (*api.BaseCommand, error) {
 	// prepare close consumer command
-	closeConsumer := &pb.CommandCloseConsumer{}
+	closeConsumer := &api.CommandCloseConsumer{}
 
 	// set fields
 	closeConsumer.ConsumerId = proto.Uint64(c.CID)
 	closeConsumer.RequestId = proto.Uint64(c.RID)
 
 	// prepare base command
-	base := &pb.BaseCommand{
-		Type:          getType(pb.BaseCommand_CLOSE_CONSUMER),
+	base := &api.BaseCommand{
+		Type:          getType(api.BaseCommand_CLOSE_CONSUMER),
 		CloseConsumer: closeConsumer,
 	}
 
@@ -82,7 +82,7 @@ func (c *CloseConsumer) Encode() (*pb.BaseCommand, error) {
 }
 
 // Decode will construct the frame from the specified components.
-func (c *CloseConsumer) Decode(bc *pb.BaseCommand) error {
+func (c *CloseConsumer) Decode(bc *api.BaseCommand) error {
 	// set fields
 	c.CID = bc.CloseConsumer.GetConsumerId()
 	c.RID = bc.CloseConsumer.GetRequestId()

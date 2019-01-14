@@ -1,7 +1,7 @@
 package frame
 
 import (
-	"github.com/256dpi/pulsar/pb"
+	"github.com/256dpi/pulsar/api"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -21,16 +21,16 @@ func (f *Flow) Type() Type {
 }
 
 // Encode will encode the frame and return its components.
-func (f *Flow) Encode() (*pb.BaseCommand, error) {
+func (f *Flow) Encode() (*api.BaseCommand, error) {
 	// prepare flow command
-	flow := &pb.CommandFlow{
+	flow := &api.CommandFlow{
 		ConsumerId:     proto.Uint64(f.CID),
 		MessagePermits: proto.Uint32(f.Messages),
 	}
 
 	// prepare base command
-	base := &pb.BaseCommand{
-		Type: getType(pb.BaseCommand_FLOW),
+	base := &api.BaseCommand{
+		Type: getType(api.BaseCommand_FLOW),
 		Flow: flow,
 	}
 

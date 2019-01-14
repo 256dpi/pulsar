@@ -3,7 +3,7 @@ package frame
 import (
 	"time"
 
-	"github.com/256dpi/pulsar/pb"
+	"github.com/256dpi/pulsar/api"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -27,7 +27,7 @@ type Metadata struct {
 	// TODO: Support schema.
 }
 
-func decodeMetadata(md *pb.MessageMetadata) Metadata {
+func decodeMetadata(md *api.MessageMetadata) Metadata {
 	// check availability
 	if md == nil {
 		return Metadata{}
@@ -41,8 +41,8 @@ func decodeMetadata(md *pb.MessageMetadata) Metadata {
 	}
 }
 
-func encodeMetadata(m Metadata) *pb.MessageMetadata {
-	return &pb.MessageMetadata{
+func encodeMetadata(m Metadata) *api.MessageMetadata {
+	return &api.MessageMetadata{
 		SequenceId:   proto.Uint64(m.Sequence),
 		ProducerName: proto.String(m.ProducerName),
 		PublishTime:  proto.Uint64(uint64(m.PublishTime.Unix())),
