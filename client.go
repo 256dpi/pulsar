@@ -17,7 +17,7 @@ type Client struct {
 
 	requestCallbacks  map[uint64]func(frame.Frame, error)
 	producerCallbacks map[uint64]func(frame.Frame, error)
-	sendCallbacks     map[uint64]func(frame.Frame, error)
+	sendCallbacks     map[string]func(frame.Frame, error)
 	consumerCallbacks map[uint64]func(frame.Frame, error)
 
 	mutex sync.Mutex
@@ -73,7 +73,7 @@ func NewClient(conn *Conn) *Client {
 		conn:              conn,
 		requestCallbacks:  make(map[uint64]func(frame.Frame, error)),
 		producerCallbacks: make(map[uint64]func(frame.Frame, error)),
-		sendCallbacks:     make(map[uint64]func(frame.Frame, error)),
+		sendCallbacks:     make(map[string]func(frame.Frame, error)),
 		consumerCallbacks: make(map[uint64]func(frame.Frame, error)),
 	}
 
@@ -219,7 +219,7 @@ func (c *Client) Send(pid, seq uint64, msg []byte, scb func(error)) error {
 
 	// store send callback
 	if scb != nil {
-		c.sendCallbacks[seq] = func(res frame.Frame, err error) {
+		c.sendCallbacks[sendKey(pid, seq)] = func(res frame.Frame, err error) {
 			// handle error
 			if err != nil {
 				scb(err)
@@ -648,19 +648,20 @@ func (c *Client) handleProducerResponse(pid uint64, f frame.Frame) {
 }
 
 func (c *Client) handleSendResponse(pid, seq uint64, f frame.Frame) {
+	// compute send key
+	key := sendKey(pid, seq)
+
 	// acquire mutex
 	c.mutex.Lock()
 
-	// TODO: Also use pid?
-
 	// load callback
-	cb, ok := c.sendCallbacks[seq]
+	cb, ok := c.sendCallbacks[key]
 	if !ok {
 		return
 	}
 
 	// delete callback
-	delete(c.sendCallbacks, seq)
+	delete(c.sendCallbacks, key)
 
 	// release mutex
 	c.mutex.Unlock()
@@ -697,4 +698,8 @@ func (c *Client) handlePing() error {
 	}
 
 	return nil
+}
+
+func sendKey(pid, seq uint64) string {
+	return fmt.Sprintf("%d:%d", pid, seq)
 }
