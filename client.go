@@ -7,16 +7,7 @@ import (
 	"github.com/256dpi/pulsar/frame"
 )
 
-type ClientConfig struct {
-	// The Pulsar connection URL. Will default to "pulsar://localhost:6650".
-	URL string
-
-	ProxyURL string
-
-	// The client version sent to the broker.
-	Version string
-}
-
+// Client is the low level client that exchanges frames with the pulsar broker.
 type Client struct {
 	conn *Conn
 
@@ -32,17 +23,18 @@ type Client struct {
 	mutex sync.Mutex
 }
 
-func Connect(config ClientConfig) (*Client, error) {
+// Connect will connect to the provided broker and return a client.
+func Connect(url, proxyURL, version string) (*Client, error) {
 	// create connection
-	conn, err := Dial(config.URL)
+	conn, err := Dial(url)
 	if err != nil {
 		return nil, err
 	}
 
 	// create connect frame
 	connect := &frame.Connect{
-		ClientVersion:  config.Version,
-		ProxyBrokerURL: config.ProxyURL,
+		ClientVersion:  version,
+		ProxyBrokerURL: proxyURL,
 	}
 
 	// send connect frame
@@ -74,6 +66,7 @@ func Connect(config ClientConfig) (*Client, error) {
 	return client, nil
 }
 
+// NewClient creates a client using the specified connection.
 func NewClient(conn *Conn) *Client {
 	// create client
 	client := &Client{
@@ -90,6 +83,8 @@ func NewClient(conn *Conn) *Client {
 	return client
 }
 
+// Lookup will send a lookup request and call the provided callback with the
+// response.
 func (c *Client) Lookup(topic string, authoritative bool, rcb func(*frame.LookupResponse, error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -141,6 +136,8 @@ func (c *Client) Lookup(topic string, authoritative bool, rcb func(*frame.Lookup
 	return nil
 }
 
+// CreateProducer will send a create producer request and call the provided callback
+// with the response.
 func (c *Client) CreateProducer(name, topic string, rcb func(uint64, int64, error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -207,6 +204,8 @@ func (c *Client) CreateProducer(name, topic string, rcb func(uint64, int64, erro
 	return nil
 }
 
+// Send will perform send request and call the provided callback with the
+// response.
 func (c *Client) Send(pid, seq uint64, msg []byte, scb func(error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -254,6 +253,8 @@ func (c *Client) Send(pid, seq uint64, msg []byte, scb func(error)) error {
 	return nil
 }
 
+// CloseProducer will send a close producer request and call the provided
+// callback with the response.
 func (c *Client) CloseProducer(pid uint64, rcb func(error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -307,6 +308,9 @@ func (c *Client) CloseProducer(pid uint64, rcb func(error)) error {
 	return nil
 }
 
+// CreateConsumer will send a create consumer request and call the provided callback
+// with the response. The second callback is called with ever incoming message
+// for the created consumer.
 func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionType, durable bool, rcb func(uint64, error), ccb func(*frame.Message, error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -357,6 +361,8 @@ func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionT
 		}
 	}
 
+	// TODO: Only store callback if request was successful?
+
 	// store consumer callback
 	if ccb != nil {
 		c.consumerCallbacks[cid] = func(res frame.Frame, err error) {
@@ -387,6 +393,7 @@ func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionT
 	return nil
 }
 
+// Flow will send a flow request.
 func (c *Client) Flow(cid uint64, num uint32) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -406,6 +413,7 @@ func (c *Client) Flow(cid uint64, num uint32) error {
 	return nil
 }
 
+// Ack will send a ack request.
 func (c *Client) Ack(cid uint64, typ frame.AckType, mid frame.MessageID) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -426,6 +434,8 @@ func (c *Client) Ack(cid uint64, typ frame.AckType, mid frame.MessageID) error {
 	return nil
 }
 
+// CloseConsumer will send a close consumer request and call the provided
+// callback with the response.
 func (c *Client) CloseConsumer(cid uint64, rcb func(error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -479,6 +489,7 @@ func (c *Client) CloseConsumer(cid uint64, rcb func(error)) error {
 	return nil
 }
 
+// Close will close the client.
 func (c *Client) Close() error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()

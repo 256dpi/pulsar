@@ -9,7 +9,7 @@ import (
 )
 
 func TestConnect(t *testing.T) {
-	client, err := Connect(ClientConfig{})
+	client, err := Connect("", "", "")
 	assert.NoError(t, err)
 
 	err = client.Close()
@@ -17,7 +17,7 @@ func TestConnect(t *testing.T) {
 }
 
 func TestClientLookup(t *testing.T) {
-	client, err := Connect(ClientConfig{})
+	client, err := Connect("", "", "")
 	assert.NoError(t, err)
 
 	done := make(chan struct{})
@@ -41,11 +41,11 @@ func TestClientLookup(t *testing.T) {
 }
 
 func TestClientCreateProducer(t *testing.T) {
-	client, err := Connect(ClientConfig{})
+	client, err := Connect("", "", "")
 	assert.NoError(t, err)
 
-	var pid uint64 = 0
-	var seq uint64 = 0
+	var pid uint64
+	var seq uint64
 	done1 := make(chan struct{})
 	err = client.CreateProducer("test", "test", func(id uint64, lastSeq int64, err error) {
 		assert.NoError(t, err)
@@ -88,7 +88,7 @@ func TestClientCreateProducer(t *testing.T) {
 }
 
 func TestClientCreateConsumer(t *testing.T) {
-	client, err := Connect(ClientConfig{})
+	client, err := Connect("", "", "")
 	assert.NoError(t, err)
 
 	var cid uint64
@@ -120,11 +120,11 @@ func TestClientCreateConsumer(t *testing.T) {
 }
 
 func TestClientConsumerAndProducer(t *testing.T) {
-	client, err := Connect(ClientConfig{})
+	client, err := Connect("", "", "")
 	assert.NoError(t, err)
 
-	var pid uint64 = 0
-	var seq uint64 = 0
+	var pid uint64
+	var seq uint64
 
 	done1 := make(chan struct{})
 	err = client.CreateProducer("test", "test", func(id uint64, lastSeq int64, err error) {

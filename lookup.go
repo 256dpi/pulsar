@@ -75,9 +75,7 @@ func singleLookup(url, topic string, authoritative bool) (*frame.LookupResponse,
 	// create new client if not available
 	if !ok {
 		// create a new client
-		newClient, err := Connect(ClientConfig{
-			URL: url,
-		})
+		newClient, err := Connect(url, "", "")
 		if err != nil {
 			return nil, err
 		}
