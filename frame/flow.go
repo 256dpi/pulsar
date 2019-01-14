@@ -11,10 +11,12 @@ type Flow struct {
 	MessagePermits uint32
 }
 
+// Type will return the frame type.
 func (f *Flow) Type() Type {
 	return FLOW
 }
 
+// Encode will encode the frame and return its components.
 func (f *Flow) Encode() (*pb.BaseCommand, error) {
 	// prepare flow command
 	flow := &pb.CommandFlow{

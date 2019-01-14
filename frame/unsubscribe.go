@@ -11,10 +11,12 @@ type Unsubscribe struct {
 	CID uint64
 }
 
+// Type will return the frame type.
 func (u *Unsubscribe) Type() Type {
 	return UNSUBSCRIBE
 }
 
+// Encode will encode the frame and return its components.
 func (u *Unsubscribe) Encode() (*pb.BaseCommand, error) {
 	// prepare unsubscribe command
 	unsubscribe := &pb.CommandUnsubscribe{

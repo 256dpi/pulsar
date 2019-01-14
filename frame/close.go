@@ -11,10 +11,12 @@ type CloseProducer struct {
 	RID uint64
 }
 
+// Type will return the frame type.
 func (p *CloseProducer) Type() Type {
 	return CLOSE_PRODUCER
 }
 
+// Encode will encode the frame and return its components.
 func (p *CloseProducer) Encode() (*pb.BaseCommand, error) {
 	// prepare close producer command
 	closeProducer := &pb.CommandCloseProducer{}
@@ -32,6 +34,7 @@ func (p *CloseProducer) Encode() (*pb.BaseCommand, error) {
 	return base, nil
 }
 
+// Decode will construct the frame from the specified components.
 func (p *CloseProducer) Decode(bc *pb.BaseCommand) error {
 	// set fields
 	p.PID = bc.CloseProducer.GetProducerId()
@@ -45,10 +48,12 @@ type CloseConsumer struct {
 	RID uint64
 }
 
+// Type will return the frame type.
 func (c *CloseConsumer) Type() Type {
 	return CLOSE_CONSUMER
 }
 
+// Encode will encode the frame and return its components.
 func (c *CloseConsumer) Encode() (*pb.BaseCommand, error) {
 	// prepare close consumer command
 	closeConsumer := &pb.CommandCloseConsumer{}
@@ -66,6 +71,7 @@ func (c *CloseConsumer) Encode() (*pb.BaseCommand, error) {
 	return base, nil
 }
 
+// Decode will construct the frame from the specified components.
 func (c *CloseConsumer) Decode(bc *pb.BaseCommand) error {
 	// set fields
 	c.CID = bc.CloseConsumer.GetConsumerId()

@@ -16,10 +16,12 @@ type Connect struct {
 	ProxyURL      string
 }
 
+// Type will return the frame type.
 func (c *Connect) Type() Type {
 	return CONNECT
 }
 
+// Encode will encode the frame and return its components.
 func (c *Connect) Encode() (*pb.BaseCommand, error) {
 	// prepare connect command
 	connect := &pb.CommandConnect{}
@@ -47,10 +49,12 @@ type Connected struct {
 	ServerVersion string
 }
 
+// Type will return the frame type.
 func (c *Connected) Type() Type {
 	return CONNECTED
 }
 
+// Decode will construct the frame from the specified components.
 func (c *Connected) Decode(bc *pb.BaseCommand) error {
 	// check protocol version
 	if bc.Connected.GetProtocolVersion() != int32(pb.ProtocolVersion_v13) {

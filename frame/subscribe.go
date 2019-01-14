@@ -34,10 +34,12 @@ type Subscribe struct {
 	InitialPosition InitialPosition
 }
 
+// Type will return the frame type.
 func (s *Subscribe) Type() Type {
 	return SUBSCRIBE
 }
 
+// Encode will encode the frame and return its components.
 func (s *Subscribe) Encode() (*pb.BaseCommand, error) {
 	// prepare sub type
 	subType := pb.CommandSubscribe_SubType(int32(s.SubType))

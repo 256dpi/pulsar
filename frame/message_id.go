@@ -1,6 +1,10 @@
 package frame
 
-import "github.com/256dpi/pulsar/pb"
+import (
+	"github.com/256dpi/pulsar/pb"
+	
+	"github.com/golang/protobuf/proto"
+)
 
 type MessageID struct {
 	LedgerID   uint64
@@ -9,7 +13,7 @@ type MessageID struct {
 	BatchIndex int32
 }
 
-func convertMessageId(mid *pb.MessageIdData) MessageID {
+func decodeMessageID(mid *pb.MessageIdData) MessageID {
 	// check availability
 	if mid == nil {
 		return MessageID{}
@@ -20,5 +24,14 @@ func convertMessageId(mid *pb.MessageIdData) MessageID {
 		EntryID:    mid.GetEntryId(),
 		Partition:  mid.GetPartition(),
 		BatchIndex: mid.GetBatchIndex(),
+	}
+}
+
+func encodeMessageID(m MessageID) *pb.MessageIdData {
+	return &pb.MessageIdData{
+		LedgerId:   proto.Uint64(m.LedgerID),
+		EntryId:    proto.Uint64(m.EntryID),
+		Partition:  proto.Int32(m.Partition),
+		BatchIndex: proto.Int32(m.BatchIndex),
 	}
 }

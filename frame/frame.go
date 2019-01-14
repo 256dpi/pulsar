@@ -14,8 +14,10 @@ var magicByte = []byte{0x0e, 0x01}
 
 var crcTable = crc32.MakeTable(crc32.Castagnoli)
 
+// Type defines the different frame types.
 type Type int
 
+// All available frame types.
 const (
 	CONNECT                           = Type(pb.BaseCommand_CONNECT)
 	CONNECTED                         = Type(pb.BaseCommand_CONNECTED)
@@ -53,26 +55,37 @@ const (
 	GET_SCHEMA_RESPONSE               = Type(pb.BaseCommand_GET_SCHEMA_RESPONSE)
 )
 
+// Frame is generic frame exchanged with the pulsar broker.
 type Frame interface {
+	// Type should return the frame type.
 	Type() Type
 }
 
+// SimpleDecoder decodes simple frames.
 type SimpleDecoder interface {
+	// Decode should construct the frame from the specified components.
 	Decode(*pb.BaseCommand) error
 }
 
+// SimpleEncoder encodes simple frames.
 type SimpleEncoder interface {
+	// Encode should encode the frame and return its components.
 	Encode() (*pb.BaseCommand, error)
 }
 
+// PayloadDecoder decodes frames with metadata and a payload.
 type PayloadDecoder interface {
+	// Decode should construct the frame from the specified components.
 	Decode(*pb.BaseCommand, *pb.MessageMetadata, []byte) error
 }
 
+// PayloadEncoder encodes frames with metadata and a payload.
 type PayloadEncoder interface {
+	// Encode should encode the frame and return its components.
 	Encode() (*pb.BaseCommand, *pb.MessageMetadata, []byte, error)
 }
 
+// Read will block and try to read a frame from the provided reader.
 func Read(reader io.Reader) (Frame, error) {
 	// read total size
 	totalSizeBytes := make([]byte, 4)
@@ -100,6 +113,7 @@ func Read(reader io.Reader) (Frame, error) {
 	return f, nil
 }
 
+// Write will write the provided frame to the specified writer.
 func Write(frame Frame, writer io.Writer) error {
 	// encode frame
 	data, err := Encode(frame)
@@ -116,6 +130,8 @@ func Write(frame Frame, writer io.Writer) error {
 	return nil
 }
 
+// Decode will decode a frame from the provided byte slice. The byte slice must
+// not include the total size.
 func Decode(data []byte) (Frame, error) {
 	// get total size
 	totalSize := len(data)
@@ -266,6 +282,8 @@ func Decode(data []byte) (Frame, error) {
 	return nil, fmt.Errorf("unsupported command type %d", base.GetType())
 }
 
+// Encode will encode the provided frame and return a byte slice. The byte slice
+// already includes the total size at the beginning.
 func Encode(frame Frame) ([]byte, error) {
 	// handle simple encoder
 	if sce, ok := frame.(SimpleEncoder); ok {

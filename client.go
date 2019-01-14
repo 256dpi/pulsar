@@ -421,9 +421,9 @@ func (c *Client) Ack(cid uint64, typ frame.AckType, mid frame.MessageID) error {
 
 	// create ack frame
 	ack := &frame.Ack{
-		CID:        cid,
-		AckType:    typ,
-		MessagedID: mid,
+		CID:         cid,
+		AckType:     typ,
+		MessagedIDs: []frame.MessageID{mid},
 	}
 
 	// send frame

@@ -13,10 +13,12 @@ type Producer struct {
 	Topic string
 }
 
+// Type will return the frame type.
 func (p *Producer) Type() Type {
 	return PRODUCER
 }
 
+// Encode will encode the frame and return its components.
 func (p *Producer) Encode() (*pb.BaseCommand, error) {
 	// prepare producer command
 	producer := &pb.CommandProducer{}
@@ -43,10 +45,12 @@ type ProducerSuccess struct {
 	LastSequence int64
 }
 
+// Type will return the frame type.
 func (s *ProducerSuccess) Type() Type {
 	return PRODUCER_SUCCESS
 }
 
+// Decode will construct the frame from the specified components.
 func (s *ProducerSuccess) Decode(bc *pb.BaseCommand) error {
 	// set fields
 	s.RID = bc.ProducerSuccess.GetRequestId()

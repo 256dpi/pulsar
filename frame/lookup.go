@@ -12,10 +12,12 @@ type Lookup struct {
 	Authoritative bool
 }
 
+// Type will return the frame type.
 func (l *Lookup) Type() Type {
 	return LOOKUP
 }
 
+// Encode will encode the frame and return its components.
 func (l *Lookup) Encode() (*pb.BaseCommand, error) {
 	// prepare lookup command
 	lookup := &pb.CommandLookupTopic{}
@@ -51,10 +53,12 @@ type LookupResponse struct {
 	ProxyThroughServiceURL bool
 }
 
+// Type will return the frame type.
 func (r *LookupResponse) Type() Type {
 	return LOOKUP_RESPONSE
 }
 
+// Decode will construct the frame from the specified components.
 func (r *LookupResponse) Decode(bc *pb.BaseCommand) error {
 	// set fields
 	r.RID = bc.LookupTopicResponse.GetRequestId()

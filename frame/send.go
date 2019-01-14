@@ -15,10 +15,12 @@ type Send struct {
 	Message      []byte
 }
 
+// Type will return the frame type.
 func (s *Send) Type() Type {
 	return SEND
 }
 
+// Encode will encode the frame and return its components.
 func (s *Send) Encode() (*pb.BaseCommand, *pb.MessageMetadata, []byte, error) {
 	// prepare send command
 	send := &pb.CommandSend{
@@ -49,15 +51,17 @@ type SendReceipt struct {
 	MessageID MessageID
 }
 
+// Type will return the frame type.
 func (r *SendReceipt) Type() Type {
 	return SEND_RECEIPT
 }
 
+// Decode will construct the frame from the specified components.
 func (r *SendReceipt) Decode(bc *pb.BaseCommand) error {
 	// set fields
 	r.PID = bc.SendReceipt.GetProducerId()
 	r.Sequence = bc.SendReceipt.GetSequenceId()
-	r.MessageID = convertMessageId(bc.SendReceipt.MessageId)
+	r.MessageID = decodeMessageID(bc.SendReceipt.MessageId)
 
 	return nil
 }
@@ -69,10 +73,12 @@ type SendError struct {
 	Message  string
 }
 
+// Type will return the frame type.
 func (e *SendError) Type() Type {
 	return SEND_ERROR
 }
 
+// Decode will construct the frame from the specified components.
 func (e *SendError) Decode(bc *pb.BaseCommand) error {
 	// set fields
 	e.PID = bc.SendError.GetProducerId()

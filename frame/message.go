@@ -11,14 +11,16 @@ type Message struct {
 	Message         []byte
 }
 
+// Type will return the frame type.
 func (m *Message) Type() Type {
 	return MESSAGE
 }
 
+// Decode will construct the frame from the specified components.
 func (m *Message) Decode(bc *pb.BaseCommand, md *pb.MessageMetadata, payload []byte) error {
 	// set fields
 	m.CID = bc.Message.GetConsumerId()
-	m.MessageID = convertMessageId(bc.Message.MessageId)
+	m.MessageID = decodeMessageID(bc.Message.MessageId)
 	m.RedeliveryCount = bc.Message.GetRedeliveryCount()
 	m.Sequence = md.GetSequenceId()
 	m.ProducerName = md.GetProducerName()

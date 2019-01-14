@@ -8,10 +8,12 @@ type Error struct {
 	Message string
 }
 
+// Type will return the frame type.
 func (e *Error) Type() Type {
 	return ERROR
 }
 
+// Decode will construct the frame from the specified components.
 func (e *Error) Decode(bc *pb.BaseCommand) error {
 	// set fields
 	e.RID = bc.Error.GetRequestId()

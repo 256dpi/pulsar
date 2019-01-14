@@ -6,23 +6,38 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+// AckType defines the type of the acknowledge operation.
 type AckType int
 
 const (
+	// Individual will acknowledge the single specified message.
 	Individual = AckType(pb.CommandAck_Individual)
+
+	// Cumulative will acknowledge all messages including the specified message.
 	Cumulative = AckType(pb.CommandAck_Cumulative)
 )
 
+// Ack is the frame sent to acknowledge a received message.
 type Ack struct {
-	CID        uint64
-	AckType    AckType
-	MessagedID MessageID
+	// CID is the consumer id.
+	CID uint64
+
+	// AckType is the acknowledgment type.
+	AckType AckType
+
+	// MessageIDs are the messages to acknowledge.
+	MessagedIDs []MessageID
+
+	// TODO: Support validation error.
+	// TODO: Support properties.
 }
 
+// Type will return the frame type.
 func (a *Ack) Type() Type {
 	return ACK
 }
 
+// Encode will encode the frame and return its components.
 func (a *Ack) Encode() (*pb.BaseCommand, error) {
 	// prepare ack type
 	ackType := pb.CommandAck_AckType(a.AckType)
@@ -31,6 +46,12 @@ func (a *Ack) Encode() (*pb.BaseCommand, error) {
 	ack := &pb.CommandAck{}
 	ack.ConsumerId = proto.Uint64(a.CID)
 	ack.AckType = &ackType
+	ack.MessageId = make([]*pb.MessageIdData, 0, len(a.MessagedIDs))
+
+	// add message ids
+	for _, mid := range a.MessagedIDs {
+		ack.MessageId = append(ack.MessageId, encodeMessageID(mid))
+	}
 
 	// prepare base command
 	base := &pb.BaseCommand{
