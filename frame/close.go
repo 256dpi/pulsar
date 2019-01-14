@@ -6,8 +6,13 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+// CloseProducer is sent to close a producer or received if a producer has been
+// closed by the broker.
 type CloseProducer struct {
+	// PID is the producer id.
 	PID uint64
+
+	// RID is the request id.
 	RID uint64
 }
 
@@ -43,6 +48,8 @@ func (p *CloseProducer) Decode(bc *pb.BaseCommand) error {
 	return nil
 }
 
+// CloseConsumer is sent to close a consumer or received if a consumer has been
+// closed by the broker.
 type CloseConsumer struct {
 	CID uint64
 	RID uint64

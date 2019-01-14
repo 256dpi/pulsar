@@ -2,7 +2,7 @@ package frame
 
 import (
 	"github.com/256dpi/pulsar/pb"
-	
+
 	"github.com/golang/protobuf/proto"
 )
 

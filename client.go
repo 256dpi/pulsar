@@ -44,8 +44,8 @@ func Connect(config ClientConfig) (*Client, error) {
 
 	// create connect frame
 	connect := &frame.Connect{
-		ClientVersion: config.Version,
-		ProxyURL:      config.ProxyURL,
+		ClientVersion:  config.Version,
+		ProxyBrokerURL: config.ProxyURL,
 	}
 
 	// send connect frame
