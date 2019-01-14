@@ -380,3 +380,7 @@ func Encode(frame Frame) ([]byte, error) {
 
 	return nil, fmt.Errorf("unable to encode frame")
 }
+
+func getType(t pb.BaseCommand_Type) *pb.BaseCommand_Type {
+	return &t
+}
