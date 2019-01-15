@@ -21,9 +21,9 @@ func consumer() {
 		MessageCallback: func(msg pulsar.ConsumerMessage) {
 			queue <- msg
 		},
-		ErrorCallback: func(_ bool, cbErr error) {
-			if cbErr != nil {
-				panic(cbErr)
+		ErrorCallback: func(_ bool, err error) {
+			if err != nil {
+				panic(err)
 			}
 		},
 	})

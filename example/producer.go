@@ -13,9 +13,9 @@ func producer() {
 	// crete producer
 	producer, err := pulsar.CreateProducer(pulsar.ProducerConfig{
 		Topic: "example",
-		Callback: func(_ bool, cbErr error) {
-			if cbErr != nil {
-				panic(cbErr)
+		Callback: func(_ bool, err error) {
+			if err != nil {
+				panic(err)
 			}
 		},
 	})
@@ -40,9 +40,9 @@ func producer() {
 		}
 
 		// send message
-		err = producer.Send(message, func(_ pulsar.ProducerMessage, cbErr error) {
-			if cbErr != nil {
-				panic(cbErr)
+		err = producer.Send(message, func(_ pulsar.ProducerMessage, err error) {
+			if err != nil {
+				panic(err)
 			}
 
 			// put back token

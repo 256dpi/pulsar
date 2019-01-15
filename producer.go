@@ -79,7 +79,7 @@ func CreateProducer(config ProducerConfig) (*Producer, error) {
 
 	// create producer
 	res := make(chan error, 1)
-	err = client.CreateProducer(config.Name, config.Topic, func(pid uint64, name string, lastSeq int64, cbErr error) {
+	err = client.CreateProducer(config.Name, config.Topic, func(pid uint64, name string, lastSeq int64, err error) {
 		// set pid and sequence
 		producer.pid = pid
 		producer.name = name
@@ -89,7 +89,7 @@ func CreateProducer(config ProducerConfig) (*Producer, error) {
 
 		// forward response
 		select {
-		case res <- cbErr:
+		case res <- err:
 		default:
 		}
 	}, config.Callback)
@@ -120,9 +120,9 @@ func (p *Producer) Send(msg ProducerMessage, cb func(ProducerMessage, error)) er
 	p.seq++
 
 	// send message
-	err := p.client.Send(p.pid, p.seq, msg.Payload, func(cbErr error) {
+	err := p.client.Send(p.pid, p.seq, msg.Payload, func(err error) {
 		if cb != nil {
-			cb(msg, cbErr)
+			cb(msg, err)
 		}
 	})
 	if err != nil {
@@ -146,10 +146,10 @@ func (p *Producer) Close() error {
 
 	// create producer
 	res := make(chan error, 1)
-	err := p.client.CloseProducer(p.pid, func(cbErr error) {
+	err := p.client.CloseProducer(p.pid, func(err error) {
 		// forward response
 		select {
-		case res <- cbErr:
+		case res <- err:
 		default:
 		}
 	})

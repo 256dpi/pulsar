@@ -237,7 +237,7 @@ func (c *Client) CreateProducer(name, topic string, rcb func(uint64, string, int
 			// get close producer frame
 			_, ok := res.(*frame.CloseProducer)
 			if !ok {
-				pcb(false, err)
+				pcb(false, nil)
 				return
 			}
 
@@ -441,7 +441,7 @@ func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionT
 
 			// check close consumer
 			if _, ok := res.(*frame.CloseConsumer); ok {
-				ccb(nil, true, err)
+				ccb(nil, true, nil)
 			}
 
 			// get message frame

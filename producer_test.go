@@ -18,8 +18,8 @@ func TestProducer(t *testing.T) {
 	}
 
 	done := make(chan struct{})
-	err = producer.Send(msg, func(cbMsg ProducerMessage, cbErr error) {
-		assert.NoError(t, cbErr)
+	err = producer.Send(msg, func(cbMsg ProducerMessage, err error) {
+		assert.NoError(t, err)
 		assert.Equal(t, msg, cbMsg)
 
 		close(done)
@@ -51,9 +51,9 @@ func BenchmarkProducer(b *testing.B) {
 	var counter int64
 
 	for i := 0; i < b.N; i++ {
-		err = producer.Send(msg, func(cbMsg ProducerMessage, cbErr error) {
-			if cbErr != nil {
-				panic(cbErr)
+		err = producer.Send(msg, func(_ ProducerMessage, err error) {
+			if err != nil {
+				panic(err)
 			}
 
 			if int(atomic.AddInt64(&counter, 1)) == b.N {

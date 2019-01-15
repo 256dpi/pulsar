@@ -22,9 +22,9 @@ func sendMessage(topic string, payload []byte) {
 	}
 
 	done := make(chan struct{})
-	err = producer.Send(msg, func(_ ProducerMessage, cbErr error) {
-		if cbErr != nil {
-			panic(cbErr)
+	err = producer.Send(msg, func(_ ProducerMessage, err error) {
+		if err != nil {
+			panic(err)
 		}
 
 		close(done)
@@ -44,6 +44,15 @@ func sendMessage(topic string, payload []byte) {
 func safeWait(ch <-chan struct{}) {
 	select {
 	case <-ch:
+	case <-time.After(5 * time.Second):
+		panic("nothing received")
+	}
+}
+
+func safeReceive(ch <-chan ConsumerMessage) ConsumerMessage {
+	select {
+	case msg := <-ch:
+		return msg
 	case <-time.After(5 * time.Second):
 		panic("nothing received")
 	}

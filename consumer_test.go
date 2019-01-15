@@ -17,8 +17,8 @@ func TestSharedConsumer(t *testing.T) {
 		MessageCallback: func(msg ConsumerMessage) {
 			queue <- msg
 		},
-		ErrorCallback: func(closed bool, cbErr error) {
-			assert.NoError(t, cbErr)
+		ErrorCallback: func(closed bool, err error) {
+			assert.NoError(t, err)
 			assert.False(t, closed)
 		},
 	})
@@ -26,7 +26,7 @@ func TestSharedConsumer(t *testing.T) {
 
 	sendMessage("public/test/test7", []byte("test7"))
 
-	msg := <-queue
+	msg := safeReceive(queue)
 
 	err = consumer.AckIndividual(msg.ID)
 	assert.NoError(t, err)
@@ -36,9 +36,6 @@ func TestSharedConsumer(t *testing.T) {
 }
 
 func TestFailoverConsumer(t *testing.T) {
-	t.Skip()
-	return
-
 	queue := make(chan ConsumerMessage, 1)
 
 	consumer, err := CreateFailoverConsumer(ConsumerConfig{
@@ -49,8 +46,8 @@ func TestFailoverConsumer(t *testing.T) {
 		MessageCallback: func(msg ConsumerMessage) {
 			queue <- msg
 		},
-		ErrorCallback: func(closed bool, cbErr error) {
-			assert.NoError(t, cbErr)
+		ErrorCallback: func(closed bool, err error) {
+			assert.NoError(t, err)
 			assert.False(t, closed)
 		},
 	})
@@ -58,7 +55,7 @@ func TestFailoverConsumer(t *testing.T) {
 
 	sendMessage("public/test/test8", []byte("test8"))
 
-	msg := <-queue
+	msg := safeReceive(queue)
 
 	err = consumer.AckIndividual(msg.ID)
 	assert.NoError(t, err)
@@ -78,8 +75,8 @@ func TestExclusiveConsumer(t *testing.T) {
 		MessageCallback: func(msg ConsumerMessage) {
 			queue <- msg
 		},
-		ErrorCallback: func(closed bool, cbErr error) {
-			assert.NoError(t, cbErr)
+		ErrorCallback: func(closed bool, err error) {
+			assert.NoError(t, err)
 			assert.False(t, closed)
 		},
 	})
@@ -87,7 +84,7 @@ func TestExclusiveConsumer(t *testing.T) {
 
 	sendMessage("public/test/test9", []byte("test9"))
 
-	msg := <-queue
+	msg := safeReceive(queue)
 
 	err = consumer.AckIndividual(msg.ID)
 	assert.NoError(t, err)

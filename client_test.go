@@ -61,7 +61,7 @@ func TestClientCreateProducer(t *testing.T) {
 		}
 
 		close(done1)
-	}, func(closed bool, cbErr error) {
+	}, func(closed bool, err error) {
 		assert.NoError(t, err)
 		assert.False(t, closed)
 	})
@@ -149,7 +149,7 @@ func TestClientConsumerAndProducer(t *testing.T) {
 		}
 
 		close(done1)
-	}, func(closed bool, cbErr error) {
+	}, func(closed bool, err error) {
 		assert.NoError(t, err)
 		assert.False(t, closed)
 	})

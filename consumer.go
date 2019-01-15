@@ -109,18 +109,18 @@ func createGenericConsumer(config ConsumerConfig, typ frame.SubscriptionType) (*
 
 	// create consumer
 	res := make(chan error, 1)
-	err = client.CreateConsumer(config.Name, config.Topic, config.Subscription, typ, true, func(cid uint64, cbErr error) {
+	err = client.CreateConsumer(config.Name, config.Topic, config.Subscription, typ, true, func(cid uint64, err error) {
 		// set pid and sequence
 		consumer.cid = cid
 
 		// forward response
 		select {
-		case res <- cbErr:
+		case res <- err:
 		default:
 		}
-	}, func(msg *frame.Message, closed bool, cbErr error) {
+	}, func(msg *frame.Message, closed bool, err error) {
 		// handle close or error
-		if closed || cbErr != nil {
+		if closed || err != nil {
 			config.ErrorCallback(closed, err)
 			return
 		}
@@ -212,10 +212,10 @@ func (c *Consumer) Close() error {
 
 	// create producer
 	res := make(chan error, 1)
-	err := c.client.CloseConsumer(c.cid, func(cbErr error) {
+	err := c.client.CloseConsumer(c.cid, func(err error) {
 		// forward response
 		select {
-		case res <- cbErr:
+		case res <- err:
 		default:
 		}
 	})
