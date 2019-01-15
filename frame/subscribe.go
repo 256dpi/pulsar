@@ -63,8 +63,10 @@ type Subscribe struct {
 	// Default: Latest.
 	InitialPosition InitialPosition
 
+	// The precise start position for the subscription.
+	StartMessageID *MessageID
+
 	// TODO: Support priority level.
-	// TODO: Support start message id.
 	// TODO: Support metadata.
 	// TODO: Support compacted read.
 	// TODO: Support schema.
@@ -95,6 +97,11 @@ func (s *Subscribe) Encode() (*api.BaseCommand, error) {
 	// set name if present
 	if s.Name != "" {
 		subscribe.ConsumerName = proto.String(s.Name)
+	}
+
+	// set start position if present
+	if s.StartMessageID != nil {
+		subscribe.StartMessageId = encodeMessageID(*s.StartMessageID)
 	}
 
 	// prepare base command

@@ -13,14 +13,18 @@ type ConsumerConfig struct {
 	// The service URL of the Pulsar broker.
 	ServiceURL string
 
+	// The consumer's name.
+	Name string
+
 	// The topic to attach to.
 	Topic string
 
 	// The subscription name.
 	Subscription string
 
-	// The consumer's name.
-	Name string
+	// If set a newly created subscription will start from the earliest message
+	// available.
+	StartFromEarliestMessage bool
 
 	// InflightMessages can be set to perform automatic flow control.
 	InflightMessages int
@@ -103,6 +107,12 @@ func createGenericConsumer(config ConsumerConfig, typ frame.SubscriptionType) (*
 		return nil, err
 	}
 
+	// prepare initial position
+	initialPos := frame.Latest
+	if config.StartFromEarliestMessage {
+		initialPos = frame.Earliest
+	}
+
 	// prepare consumer
 	consumer := &Consumer{
 		config: config,
@@ -112,7 +122,7 @@ func createGenericConsumer(config ConsumerConfig, typ frame.SubscriptionType) (*
 
 	// create consumer
 	res := make(chan error, 1)
-	err = client.CreateConsumer(config.Name, config.Topic, config.Subscription, typ, true, func(cid uint64, err error) {
+	err = client.CreateConsumer(config.Name, config.Topic, config.Subscription, typ, true, initialPos, nil, func(cid uint64, err error) {
 		// set pid and sequence
 		consumer.cid = cid
 

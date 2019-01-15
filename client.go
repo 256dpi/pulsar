@@ -372,7 +372,7 @@ func (c *Client) CloseProducer(pid uint64, rcb func(error)) error {
 // CreateConsumer will send a create consumer request and call the provided callback
 // with the response. The second callback is called with ever incoming message
 // for the created consumer.
-func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionType, durable bool, rcb func(cid uint64, err error), ccb func(msg *frame.Message, active *bool, err error)) error {
+func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionType, durable bool, ip frame.InitialPosition, startMID *MessageID, rcb func(cid uint64, err error), ccb func(msg *frame.Message, active *bool, err error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -396,7 +396,8 @@ func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionT
 		Subscription:    sub,
 		SubType:         typ,
 		Durable:         durable,
-		InitialPosition: frame.Latest,
+		InitialPosition: ip,
+		StartMessageID:  startMID,
 	}
 
 	// store request callback

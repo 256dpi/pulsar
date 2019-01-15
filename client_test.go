@@ -100,7 +100,7 @@ func TestClientCreateConsumer(t *testing.T) {
 
 	var cid uint64
 	done1 := make(chan struct{})
-	err = client.CreateConsumer("test3", "public/test/test3", "test3", frame.Exclusive, false, func(id uint64, err error) {
+	err = client.CreateConsumer("test3", "public/test/test3", "test3", frame.Exclusive, false, frame.Latest, nil, func(id uint64, err error) {
 		assert.NoError(t, err)
 		assert.Equal(t, uint64(0), cid)
 
@@ -159,7 +159,7 @@ func TestClientConsumerAndProducer(t *testing.T) {
 	var mid frame.MessageID
 	done2 := make(chan struct{})
 	done4 := make(chan struct{})
-	err = client.CreateConsumer("test4", "public/test/test4", "test4", frame.Exclusive, false, func(id uint64, err error) {
+	err = client.CreateConsumer("test4", "public/test/test4", "test4", frame.Exclusive, false, frame.Latest, nil, func(id uint64, err error) {
 		assert.NoError(t, err)
 		assert.Equal(t, uint64(0), cid)
 
