@@ -85,12 +85,16 @@ func (s *Subscribe) Encode() (*api.BaseCommand, error) {
 	subscribe := &api.CommandSubscribe{
 		RequestId:       proto.Uint64(s.RID),
 		ConsumerId:      proto.Uint64(s.CID),
-		ConsumerName:    proto.String(s.Name),
 		Topic:           proto.String(s.Topic),
 		Subscription:    proto.String(s.Subscription),
 		SubType:         &subType,
 		Durable:         proto.Bool(s.Durable),
 		InitialPosition: &inPos,
+	}
+
+	// set name if present
+	if s.Name != "" {
+		subscribe.ConsumerName = proto.String(s.Name)
 	}
 
 	// prepare base command
