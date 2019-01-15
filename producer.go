@@ -121,7 +121,9 @@ func (p *Producer) Send(msg ProducerMessage, cb func(ProducerMessage, error)) er
 
 	// send message
 	err := p.client.Send(p.pid, p.seq, msg.Payload, func(cbErr error) {
-		cb(msg, cbErr)
+		if cb != nil {
+			cb(msg, cbErr)
+		}
 	})
 	if err != nil {
 		return err
