@@ -8,6 +8,8 @@ import (
 	"github.com/256dpi/pulsar/frame"
 )
 
+const clientVersion = "github.com/256dpi/pulsar"
+
 // ErrClientClosed indicates that the client has been closed.
 var ErrClientClosed = errors.New("client closed")
 
@@ -20,9 +22,6 @@ type ClientConfig struct {
 	// The URL of the target Pulsar broker when the physical URL points to a
 	// Pulsar proxy that forwards the connection to the logical broker.
 	LogicalBrokerURL string
-
-	// The submitted client version identifier.
-	ClientVersion string
 }
 
 // Client is the low level client that exchanges frames with the pulsar broker.
@@ -52,7 +51,7 @@ func Connect(cfg ClientConfig) (*Client, error) {
 
 	// create connect frame
 	connect := &frame.Connect{
-		ClientVersion:        cfg.ClientVersion,
+		ClientVersion:        clientVersion,
 		ProxyTargetBrokerURL: cfg.LogicalBrokerURL,
 	}
 
