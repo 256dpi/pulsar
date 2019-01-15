@@ -37,7 +37,11 @@ func (p *Producer) Encode() (*api.BaseCommand, error) {
 	producer.Topic = proto.String(p.Topic)
 	producer.ProducerId = proto.Uint64(p.PID)
 	producer.RequestId = proto.Uint64(p.RID)
-	producer.ProducerName = proto.String(p.Name)
+
+	// add name if present
+	if p.Name != "" {
+		producer.ProducerName = proto.String(p.Name)
+	}
 
 	// prepare base command
 	base := &api.BaseCommand{

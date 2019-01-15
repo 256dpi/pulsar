@@ -16,6 +16,8 @@ func TestProducer(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
+	assert.NotEmpty(t, producer.Name())
+
 	msg := ProducerMessage{
 		Payload: []byte("test6"),
 	}
