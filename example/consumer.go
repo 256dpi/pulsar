@@ -13,10 +13,11 @@ func consumer() {
 	queue := make(chan pulsar.ConsumerMessage, consumerInflightMessages)
 
 	// create consumer
-	consumer, err := pulsar.CreateExclusiveConsumer(pulsar.ConsumerConfig{
+	consumer, err := pulsar.CreateConsumer(pulsar.ConsumerConfig{
 		Name:             "example",
 		Topic:            "example",
 		Subscription:     "example",
+		SubscriptionType: pulsar.Exclusive,
 		InflightMessages: consumerInflightMessages,
 		MessageCallback: func(msg pulsar.ConsumerMessage) {
 			queue <- msg

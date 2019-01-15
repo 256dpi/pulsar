@@ -8,6 +8,22 @@ import (
 	"github.com/256dpi/pulsar/frame"
 )
 
+// SubscriptionType defines the subscription type.
+type SubscriptionType = frame.SubscriptionType
+
+const (
+	// Exclusive subscriptions are only allowed to be subscribed by one client.
+	// Additional subscriptions will return an error.
+	Exclusive = frame.Exclusive
+
+	// Shared subscriptions allow messages to be distributed among the consumers.
+	Shared = frame.Shared
+
+	// Failover subscriptions allow additional consumers to take over when the
+	// active consumer fail.s
+	Failover = frame.Failover
+)
+
 // ConsumerConfig holds the configuration for a consumer.
 type ConsumerConfig struct {
 	// The service URL of the Pulsar broker.
@@ -21,6 +37,9 @@ type ConsumerConfig struct {
 
 	// The subscription name.
 	Subscription string
+
+	// The subscription type.
+	SubscriptionType SubscriptionType
 
 	// If set a newly created subscription will start from the earliest message
 	// available.
@@ -63,28 +82,13 @@ type Consumer struct {
 	client *Client
 
 	cid     uint64
-	shared  bool
 	counter int
 
 	mutex sync.Mutex
 }
 
-// CreateSharedConsumer will setup and return a shared consumer.
-func CreateSharedConsumer(config ConsumerConfig) (*Consumer, error) {
-	return createGenericConsumer(config, frame.Shared)
-}
-
-// CreateFailoverConsumer will setup and return a failover consumer.
-func CreateFailoverConsumer(config ConsumerConfig) (*Consumer, error) {
-	return createGenericConsumer(config, frame.Failover)
-}
-
-// CreateExclusiveConsumer will setup and return an exclusive consumer.
-func CreateExclusiveConsumer(config ConsumerConfig) (*Consumer, error) {
-	return createGenericConsumer(config, frame.Exclusive)
-}
-
-func createGenericConsumer(config ConsumerConfig, typ frame.SubscriptionType) (*Consumer, error) {
+// CreateConsumer will setup and return a consumer.
+func CreateConsumer(config ConsumerConfig) (*Consumer, error) {
 	// set default create request timeout
 	if config.CreateTimeout == 0 {
 		config.CreateTimeout = DefaultTimeout
@@ -117,12 +121,11 @@ func createGenericConsumer(config ConsumerConfig, typ frame.SubscriptionType) (*
 	consumer := &Consumer{
 		config: config,
 		client: client,
-		shared: typ == frame.Shared,
 	}
 
 	// create consumer
 	res := make(chan error, 1)
-	err = client.CreateConsumer(config.Name, config.Topic, config.Subscription, typ, true, initialPos, nil, func(cid uint64, err error) {
+	err = client.CreateConsumer(config.Name, config.Topic, config.Subscription, config.SubscriptionType, true, initialPos, nil, func(cid uint64, err error) {
 		// set pid and sequence
 		consumer.cid = cid
 
@@ -233,7 +236,7 @@ func (c *Consumer) AckCumulative(mid frame.MessageID) error {
 	defer c.mutex.Unlock()
 
 	// check subscription type
-	if c.shared {
+	if c.config.SubscriptionType == frame.Shared {
 		return fmt.Errorf("cumulative ack not supported for shared subscriptions")
 	}
 

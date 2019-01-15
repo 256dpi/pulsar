@@ -9,10 +9,11 @@ import (
 func TestSharedConsumer(t *testing.T) {
 	queue := make(chan interface{}, 1)
 
-	consumer, err := CreateSharedConsumer(ConsumerConfig{
+	consumer, err := CreateConsumer(ConsumerConfig{
 		Name:             "test7",
 		Topic:            "public/test/test7",
 		Subscription:     "test7",
+		SubscriptionType: Shared,
 		InflightMessages: 1,
 		MessageCallback: func(msg ConsumerMessage) {
 			queue <- msg
@@ -38,10 +39,11 @@ func TestSharedConsumer(t *testing.T) {
 func TestFailoverConsumer(t *testing.T) {
 	queue := make(chan interface{}, 1)
 
-	consumer, err := CreateFailoverConsumer(ConsumerConfig{
+	consumer, err := CreateConsumer(ConsumerConfig{
 		Name:             "test8",
 		Topic:            "public/test/test8",
 		Subscription:     "test8",
+		SubscriptionType: Failover,
 		InflightMessages: 1,
 		MessageCallback: func(msg ConsumerMessage) {
 			queue <- msg
@@ -70,10 +72,11 @@ func TestFailoverConsumer(t *testing.T) {
 func TestExclusiveConsumer(t *testing.T) {
 	queue := make(chan interface{}, 1)
 
-	consumer, err := CreateExclusiveConsumer(ConsumerConfig{
+	consumer, err := CreateConsumer(ConsumerConfig{
 		Name:             "test9",
 		Topic:            "public/test/test9",
 		Subscription:     "test9",
+		SubscriptionType: Exclusive,
 		InflightMessages: 1,
 		MessageCallback: func(msg ConsumerMessage) {
 			queue <- msg
@@ -99,10 +102,11 @@ func TestExclusiveConsumer(t *testing.T) {
 func TestManualFlowControl(t *testing.T) {
 	queue := make(chan interface{}, 1)
 
-	consumer, err := CreateSharedConsumer(ConsumerConfig{
-		Name:         "test10",
-		Topic:        "public/test/test10",
-		Subscription: "test10",
+	consumer, err := CreateConsumer(ConsumerConfig{
+		Name:             "test10",
+		Topic:            "public/test/test10",
+		Subscription:     "test10",
+		SubscriptionType: Shared,
 		MessageCallback: func(msg ConsumerMessage) {
 			queue <- msg
 		},
