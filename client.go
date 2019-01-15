@@ -196,6 +196,24 @@ func (c *Client) CreateProducer(name, topic string, rcb func(pid uint64, name st
 		Topic: topic,
 	}
 
+	// prepare producer callback
+	producerCallback := func(res frame.Frame, err error) {
+		// handle error
+		if err != nil {
+			pcb(err)
+			return
+		}
+
+		// check close producer frame
+		if _, ok := res.(*frame.CloseProducer); ok {
+			pcb(ErrProducerClosed)
+			return
+		}
+
+		// call callback with error
+		pcb(fmt.Errorf("unknown producer event frame"))
+	}
+
 	// store callback
 	if rcb != nil {
 		c.requestCallbacks[rid] = func(res frame.Frame, err error) {
@@ -218,30 +236,15 @@ func (c *Client) CreateProducer(name, topic string, rcb func(pid uint64, name st
 				return
 			}
 
+			// store producer callback
+			if pcb != nil {
+				c.mutex.Lock()
+				c.producerCallbacks[pid] = producerCallback
+				c.mutex.Unlock()
+			}
+
 			// call callback
 			rcb(pid, producerSuccess.Name, producerSuccess.LastSequence, nil)
-		}
-	}
-
-	// TODO: Only store callback if request was successful?
-
-	// store producer callback
-	if pcb != nil {
-		c.producerCallbacks[pid] = func(res frame.Frame, err error) {
-			// handle error
-			if err != nil {
-				pcb(err)
-				return
-			}
-
-			// check close producer frame
-			if _, ok := res.(*frame.CloseProducer); ok {
-				pcb(ErrProducerClosed)
-				return
-			}
-
-			// call callback with error
-			pcb(fmt.Errorf("unknown producer event frame"))
 		}
 	}
 
@@ -400,6 +403,47 @@ func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionT
 		StartMessageID:  startMID,
 	}
 
+	// prepare consumer callback
+	consumerCallback := func(res frame.Frame, err error) {
+		// handle error
+		if err != nil {
+			ccb(nil, nil, err)
+			return
+		}
+
+		// check close consumer
+		if _, ok := res.(*frame.CloseConsumer); ok {
+			ccb(nil, nil, ErrConsumerClosed)
+			return
+		}
+
+		// check active consumer change
+		if acc, ok := res.(*frame.ActiveConsumerChange); ok {
+			if acc.Active {
+				ccb(nil, boolPointer(true), nil)
+			} else {
+				ccb(nil, boolPointer(false), nil)
+			}
+			return
+		}
+
+		// check reached end of topic
+		if _, ok := res.(*frame.ReachedEndOfTopic); ok {
+			ccb(nil, nil, ErrEndOfTopic)
+			return
+		}
+
+		// get message frame
+		message, ok := res.(*frame.Message)
+		if !ok {
+			ccb(nil, nil, fmt.Errorf("expected to receive a message frame"))
+			return
+		}
+
+		// call callback
+		ccb(message, nil, nil)
+	}
+
 	// store request callback
 	if rcb != nil {
 		c.requestCallbacks[rid] = func(res frame.Frame, err error) {
@@ -422,53 +466,15 @@ func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionT
 				return
 			}
 
+			// store consumer callback
+			if ccb != nil {
+				c.mutex.Lock()
+				c.consumerCallbacks[cid] = consumerCallback
+				c.mutex.Unlock()
+			}
+
 			// call callback
 			rcb(cid, nil)
-		}
-	}
-
-	// TODO: Only store callback if request was successful?
-
-	// store consumer callback
-	if ccb != nil {
-		c.consumerCallbacks[cid] = func(res frame.Frame, err error) {
-			// handle error
-			if err != nil {
-				ccb(nil, nil, err)
-				return
-			}
-
-			// check close consumer
-			if _, ok := res.(*frame.CloseConsumer); ok {
-				ccb(nil, nil, ErrConsumerClosed)
-				return
-			}
-
-			// check active consumer change
-			if acc, ok := res.(*frame.ActiveConsumerChange); ok {
-				if acc.Active {
-					ccb(nil, boolPointer(true), nil)
-				} else {
-					ccb(nil, boolPointer(false), nil)
-				}
-				return
-			}
-
-			// check reached end of topic
-			if _, ok := res.(*frame.ReachedEndOfTopic); ok {
-				ccb(nil, nil, ErrEndOfTopic)
-				return
-			}
-
-			// get message frame
-			message, ok := res.(*frame.Message)
-			if !ok {
-				ccb(nil, nil, fmt.Errorf("expected to receive a message frame"))
-				return
-			}
-
-			// call callback
-			ccb(message, nil, nil)
 		}
 	}
 
