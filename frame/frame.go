@@ -270,7 +270,8 @@ func Decode(data []byte) (Frame, error) {
 	case api.BaseCommand_CONSUMER_STATS_RESPONSE:
 		// TODO: Add support.
 	case api.BaseCommand_REACHED_END_OF_TOPIC:
-		// TODO: Add support.
+		reachedEndOfTopic := &ReachedEndOfTopic{}
+		return reachedEndOfTopic, reachedEndOfTopic.Decode(base)
 	case api.BaseCommand_SEEK:
 		// not supported
 	case api.BaseCommand_GET_LAST_MESSAGE_ID:
@@ -278,7 +279,8 @@ func Decode(data []byte) (Frame, error) {
 	case api.BaseCommand_GET_LAST_MESSAGE_ID_RESPONSE:
 		// TODO: Add support.
 	case api.BaseCommand_ACTIVE_CONSUMER_CHANGE:
-		// TODO: Add support.
+		activeConsumerChange := &ActiveConsumerChange{}
+		return activeConsumerChange, activeConsumerChange.Decode(base)
 	case api.BaseCommand_GET_TOPICS_OF_NAMESPACE:
 		// not supported
 	case api.BaseCommand_GET_TOPICS_OF_NAMESPACE_RESPONSE:
