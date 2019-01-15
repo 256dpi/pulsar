@@ -105,6 +105,8 @@ func Read(reader io.Reader) (Frame, error) {
 		return nil, fmt.Errorf("received frame is too big")
 	}
 
+	// TODO: Pool byte slices.
+
 	// read complete frame
 	frameBytes := make([]byte, totalSize)
 	_, err = io.ReadFull(reader, frameBytes)
@@ -318,6 +320,8 @@ func Encode(frame Frame) ([]byte, error) {
 			return nil, fmt.Errorf("to be written frame is too big")
 		}
 
+		// TODO: Pool byte slices.
+
 		// allocate final slice
 		data := make([]byte, 4+totalSize)
 
@@ -365,6 +369,8 @@ func Encode(frame Frame) ([]byte, error) {
 		if 4+totalSize > SizeLimit {
 			return nil, fmt.Errorf("to be written frame is too big")
 		}
+
+		// TODO: Pool byte slices.
 
 		// allocate final slice
 		data := make([]byte, 4+totalSize)
