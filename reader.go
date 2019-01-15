@@ -126,6 +126,13 @@ func CreateReader(config ReaderConfig) (*Reader, error) {
 			Payload: msg.Payload,
 		})
 
+		// ack message immediately
+		err = client.Ack(reader.cid, frame.Cumulative, msg.MessageID)
+		if err != nil {
+			config.ErrorCallback(err)
+			return
+		}
+
 		// perform flow control if enabled
 		if config.InflightMessages > 0 {
 			// increment counter
