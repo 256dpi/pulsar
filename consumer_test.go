@@ -17,9 +17,8 @@ func TestSharedConsumer(t *testing.T) {
 		MessageCallback: func(msg ConsumerMessage) {
 			queue <- msg
 		},
-		ErrorCallback: func(closed bool, err error) {
+		ErrorCallback: func(err error) {
 			assert.NoError(t, err)
-			assert.False(t, closed)
 		},
 	})
 	assert.NoError(t, err)
@@ -46,9 +45,11 @@ func TestFailoverConsumer(t *testing.T) {
 		MessageCallback: func(msg ConsumerMessage) {
 			queue <- msg
 		},
-		ErrorCallback: func(closed bool, err error) {
+		StateCallback: func(active bool) {
+			assert.True(t, active)
+		},
+		ErrorCallback: func(err error) {
 			assert.NoError(t, err)
-			assert.False(t, closed)
 		},
 	})
 	assert.NoError(t, err)
@@ -75,9 +76,8 @@ func TestExclusiveConsumer(t *testing.T) {
 		MessageCallback: func(msg ConsumerMessage) {
 			queue <- msg
 		},
-		ErrorCallback: func(closed bool, err error) {
+		ErrorCallback: func(err error) {
 			assert.NoError(t, err)
-			assert.False(t, closed)
 		},
 	})
 	assert.NoError(t, err)

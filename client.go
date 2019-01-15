@@ -161,7 +161,7 @@ func (c *Client) Lookup(topic string, authoritative bool, rcb func(*frame.Lookup
 
 // CreateProducer will send a create producer request and call the provided callback
 // with the response.
-func (c *Client) CreateProducer(name, topic string, rcb func(uint64, string, int64, error), pcb func(bool, error)) error {
+func (c *Client) CreateProducer(name, topic string, rcb func(pid uint64, name string, lastSeq int64, err error), pcb func(error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -218,19 +218,18 @@ func (c *Client) CreateProducer(name, topic string, rcb func(uint64, string, int
 		c.producerCallbacks[pid] = func(res frame.Frame, err error) {
 			// handle error
 			if err != nil {
-				pcb(false, err)
+				pcb(err)
 				return
 			}
 
-			// get close producer frame
-			_, ok := res.(*frame.CloseProducer)
-			if !ok {
-				pcb(false, nil)
+			// check close producer frame
+			if _, ok := res.(*frame.CloseProducer); ok {
+				pcb(ErrProducerClosed)
 				return
 			}
 
-			// call callback
-			pcb(true, nil)
+			// call callback with error
+			pcb(fmt.Errorf("unknown producer event frame"))
 		}
 	}
 
@@ -277,9 +276,8 @@ func (c *Client) Send(pid, seq uint64, msg []byte, scb func(error)) error {
 			}
 
 			// get send receipt frame
-			_, ok := res.(*frame.SendReceipt)
-			if !ok {
-				scb(fmt.Errorf("expected to receive a send receipt frame"))
+			if _, ok := res.(*frame.SendReceipt); !ok {
+				scb(fmt.Errorf("expected to receive send receipt frame"))
 				return
 			}
 
@@ -362,7 +360,7 @@ func (c *Client) CloseProducer(pid uint64, rcb func(error)) error {
 // CreateConsumer will send a create consumer request and call the provided callback
 // with the response. The second callback is called with ever incoming message
 // for the created consumer.
-func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionType, durable bool, rcb func(uint64, error), ccb func(*frame.Message, bool, error)) error {
+func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionType, durable bool, rcb func(cid uint64, err error), ccb func(msg *frame.Message, active *bool, err error)) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -423,24 +421,41 @@ func (c *Client) CreateConsumer(name, topic, sub string, typ frame.SubscriptionT
 		c.consumerCallbacks[cid] = func(res frame.Frame, err error) {
 			// handle error
 			if err != nil {
-				ccb(nil, false, err)
+				ccb(nil, nil, err)
 				return
 			}
 
 			// check close consumer
 			if _, ok := res.(*frame.CloseConsumer); ok {
-				ccb(nil, true, nil)
+				ccb(nil, nil, ErrConsumerClosed)
+				return
+			}
+
+			// check active consumer change
+			if acc, ok := res.(*frame.ActiveConsumerChange); ok {
+				if acc.Active {
+					ccb(nil, boolPointer(true), nil)
+				} else {
+					ccb(nil, boolPointer(false), nil)
+				}
+				return
+			}
+
+			// check reached end of topic
+			if _, ok := res.(*frame.ReachedEndOfTopic); ok {
+				ccb(nil, nil, ErrEndOfTopic)
+				return
 			}
 
 			// get message frame
 			message, ok := res.(*frame.Message)
 			if !ok {
-				ccb(nil, false, fmt.Errorf("expected to receive a message frame"))
+				ccb(nil, nil, fmt.Errorf("expected to receive a message frame"))
 				return
 			}
 
 			// call callback
-			ccb(message, false, nil)
+			ccb(message, nil, nil)
 		}
 	}
 
@@ -821,4 +836,8 @@ func (c *Client) die(err error) {
 
 func sendKey(pid, seq uint64) string {
 	return fmt.Sprintf("%d:%d", pid, seq)
+}
+
+func boolPointer(value bool) *bool {
+	return &value
 }

@@ -13,10 +13,8 @@ func producer() {
 	// crete producer
 	producer, err := pulsar.CreateProducer(pulsar.ProducerConfig{
 		Topic: "example",
-		Callback: func(_ bool, err error) {
-			if err != nil {
-				panic(err)
-			}
+		ErrorCallback: func(err error) {
+			panic(err)
 		},
 	})
 	if err != nil {

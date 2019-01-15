@@ -10,6 +10,9 @@ import (
 func TestProducer(t *testing.T) {
 	producer, err := CreateProducer(ProducerConfig{
 		Topic: "public/test/test6",
+		ErrorCallback: func(err error) {
+			assert.NoError(t, err)
+		},
 	})
 	assert.NoError(t, err)
 
@@ -37,6 +40,9 @@ func BenchmarkProducer(b *testing.B) {
 
 	producer, err := CreateProducer(ProducerConfig{
 		Topic: "public/test/bench1",
+		ErrorCallback: func(err error) {
+			panic(err)
+		},
 	})
 	if err != nil {
 		panic(err)

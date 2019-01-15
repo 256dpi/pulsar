@@ -1,9 +1,14 @@
 package pulsar
 
 import (
+	"errors"
 	"sync"
 	"time"
 )
+
+// ErrProducerClosed is returned in callbacks to indicate that the producer has
+// been closed.
+var ErrProducerClosed = errors.New("producer closed")
 
 // ProducerConfig holds the configuration for a producer.
 type ProducerConfig struct {
@@ -20,7 +25,7 @@ type ProducerConfig struct {
 
 	// The callback that is called when the underlying client fails or the
 	// broker requested the producer to close and reconnect.
-	Callback func(closed bool, err error)
+	ErrorCallback func(err error)
 
 	// The timeout after the creation request triggers and error.
 	CreateTimeout time.Duration
@@ -92,7 +97,7 @@ func CreateProducer(config ProducerConfig) (*Producer, error) {
 		case res <- err:
 		default:
 		}
-	}, config.Callback)
+	}, config.ErrorCallback)
 	if err != nil {
 		return nil, err
 	}

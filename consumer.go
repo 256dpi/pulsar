@@ -1,12 +1,21 @@
 package pulsar
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/256dpi/pulsar/frame"
 )
+
+// ErrConsumerClosed is returned in callbacks to indicate that the producer or consumer
+// has been closed.
+var ErrConsumerClosed = errors.New("consumer closed")
+
+// ErrEndOfTopic is returned in the callback to indicate that the consumer
+// reached the end of the topic.
+var ErrEndOfTopic = errors.New("end of topic")
 
 // ConsumerConfig holds the configuration for a consumer.
 type ConsumerConfig struct {
@@ -28,9 +37,14 @@ type ConsumerConfig struct {
 	// The callback that is called with incoming messages.
 	MessageCallback func(ConsumerMessage)
 
-	// The callback that is called when the underlying client fails or the
-	// broker requested the consumer to close and reconnect.
-	ErrorCallback func(close bool, err error)
+	// The callback that is called when the state of the consumer has been
+	// changed by the broker.
+	StateCallback func(bool)
+
+	// The callback that is called when the consumer has been closed by the
+	// broker, the end of the topic has been reached or the underlying client
+	// failed.
+	ErrorCallback func(error)
 
 	// The timeout after the creation request triggers and error.
 	CreateTimeout time.Duration
@@ -53,8 +67,8 @@ type Consumer struct {
 	config ConsumerConfig
 	client *Client
 
-	cid  uint64
-	name string
+	cid    uint64
+	name   string
 	shared bool
 
 	counter int
@@ -118,10 +132,16 @@ func createGenericConsumer(config ConsumerConfig, typ frame.SubscriptionType) (*
 		case res <- err:
 		default:
 		}
-	}, func(msg *frame.Message, closed bool, err error) {
-		// handle close or error
-		if closed || err != nil {
-			config.ErrorCallback(closed, err)
+	}, func(msg *frame.Message, active *bool, err error) {
+		// handle error
+		if err != nil {
+			config.ErrorCallback(err)
+			return
+		}
+
+		// handle active
+		if active != nil {
+			config.StateCallback(*active)
 			return
 		}
 
@@ -139,7 +159,7 @@ func createGenericConsumer(config ConsumerConfig, typ frame.SubscriptionType) (*
 			// request more messages
 			err = client.Flow(consumer.cid, uint32(consumer.counter))
 			if err != nil {
-				config.ErrorCallback(false, err)
+				config.ErrorCallback(err)
 				return
 			}
 

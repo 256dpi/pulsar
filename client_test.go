@@ -61,9 +61,8 @@ func TestClientCreateProducer(t *testing.T) {
 		}
 
 		close(done1)
-	}, func(closed bool, err error) {
+	}, func(err error) {
 		assert.NoError(t, err)
-		assert.False(t, closed)
 	})
 	assert.NoError(t, err)
 
@@ -149,9 +148,8 @@ func TestClientConsumerAndProducer(t *testing.T) {
 		}
 
 		close(done1)
-	}, func(closed bool, err error) {
+	}, func(err error) {
 		assert.NoError(t, err)
-		assert.False(t, closed)
 	})
 	assert.NoError(t, err)
 
@@ -168,9 +166,9 @@ func TestClientConsumerAndProducer(t *testing.T) {
 		cid = id
 
 		close(done2)
-	}, func(msg *frame.Message, closed bool, err error) {
+	}, func(msg *frame.Message, active *bool, err error) {
 		assert.NoError(t, err)
-		assert.False(t, closed)
+		assert.Nil(t, active)
 		assert.Equal(t, []byte("test4"), msg.Payload)
 
 		mid = msg.MessageID
