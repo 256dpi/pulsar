@@ -97,9 +97,9 @@ func TestManualFlowControl(t *testing.T) {
 	queue := make(chan ConsumerMessage, 1)
 
 	consumer, err := CreateSharedConsumer(ConsumerConfig{
-		Name:             "test10",
-		Topic:            "public/test/test10",
-		Subscription:     "test10",
+		Name:         "test10",
+		Topic:        "public/test/test10",
+		Subscription: "test10",
 		MessageCallback: func(msg ConsumerMessage) {
 			queue <- msg
 		},
