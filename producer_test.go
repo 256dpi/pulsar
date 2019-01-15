@@ -9,12 +9,12 @@ import (
 
 func TestProducer(t *testing.T) {
 	producer, err := CreateProducer(ProducerConfig{
-		Topic: "test",
+		Topic: "public/test/test6",
 	})
 	assert.NoError(t, err)
 
 	msg := ProducerMessage{
-		Payload: []byte("hello"),
+		Payload: []byte("test6"),
 	}
 
 	done := make(chan struct{})
@@ -36,14 +36,14 @@ func BenchmarkProducer(b *testing.B) {
 	b.ReportAllocs()
 
 	producer, err := CreateProducer(ProducerConfig{
-		Topic: "test",
+		Topic: "public/test/bench1",
 	})
 	if err != nil {
 		panic(err)
 	}
 
 	msg := ProducerMessage{
-		Payload: []byte("hello"),
+		Payload: []byte("bench1"),
 	}
 
 	done := make(chan struct{})

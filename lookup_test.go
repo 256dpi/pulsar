@@ -7,7 +7,7 @@ import (
 )
 
 func TestLookup(t *testing.T) {
-	config, redirects, err := Lookup("pulsar://localhost:6650", "test")
+	config, redirects, err := Lookup("pulsar://localhost:6650", "public/test/test5")
 	assert.NoError(t, err)
 	assert.Equal(t, 0, redirects)
 	assert.Equal(t, ClientConfig{
