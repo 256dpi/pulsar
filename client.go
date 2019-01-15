@@ -699,7 +699,7 @@ func (c *Client) handleFrame(f frame.Frame) error {
 	case frame.ConsumerStatsResponseFrame:
 		// TODO: Implement.
 	case frame.ReachedEndOfTopicFrame:
-		// TODO: Implement.
+		c.handleConsumerResponse(f.(*frame.ReachedEndOfTopic).CID, f)
 	case frame.SeekFrame:
 		// not implemented
 	case frame.GetLastMessageIDFrame:
@@ -707,7 +707,7 @@ func (c *Client) handleFrame(f frame.Frame) error {
 	case frame.GetLastMessageIDResponseFrame:
 		// TODO: Implement.
 	case frame.ActiveConsumerChangeFrame:
-		// TODO: Implement.
+		c.handleConsumerResponse(f.(*frame.ActiveConsumerChange).CID, f)
 	case frame.GetTopicsOfNamespaceFrame:
 		// not implemented
 	case frame.GetTopicsOfNamespaceResponseFrame:
