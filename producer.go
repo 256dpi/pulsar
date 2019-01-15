@@ -1,14 +1,9 @@
 package pulsar
 
 import (
-	"errors"
 	"sync"
 	"time"
 )
-
-// ErrProducerClosed is returned in callbacks to indicate that the producer has
-// been closed.
-var ErrProducerClosed = errors.New("producer closed")
 
 // ProducerConfig holds the configuration for a producer.
 type ProducerConfig struct {

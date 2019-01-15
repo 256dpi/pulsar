@@ -7,7 +7,7 @@ import (
 )
 
 func TestSharedConsumer(t *testing.T) {
-	queue := make(chan ConsumerMessage, 1)
+	queue := make(chan interface{}, 1)
 
 	consumer, err := CreateSharedConsumer(ConsumerConfig{
 		Name:             "test7",
@@ -25,7 +25,8 @@ func TestSharedConsumer(t *testing.T) {
 
 	sendMessage("public/test/test7", []byte("test7"))
 
-	msg := safeReceive(queue)
+	msg := safeReceive(queue).(ConsumerMessage)
+	assert.Equal(t, []byte("test7"), msg.Payload)
 
 	err = consumer.AckIndividual(msg.ID)
 	assert.NoError(t, err)
@@ -35,7 +36,7 @@ func TestSharedConsumer(t *testing.T) {
 }
 
 func TestFailoverConsumer(t *testing.T) {
-	queue := make(chan ConsumerMessage, 1)
+	queue := make(chan interface{}, 1)
 
 	consumer, err := CreateFailoverConsumer(ConsumerConfig{
 		Name:             "test8",
@@ -56,7 +57,8 @@ func TestFailoverConsumer(t *testing.T) {
 
 	sendMessage("public/test/test8", []byte("test8"))
 
-	msg := safeReceive(queue)
+	msg := safeReceive(queue).(ConsumerMessage)
+	assert.Equal(t, []byte("test8"), msg.Payload)
 
 	err = consumer.AckIndividual(msg.ID)
 	assert.NoError(t, err)
@@ -66,7 +68,7 @@ func TestFailoverConsumer(t *testing.T) {
 }
 
 func TestExclusiveConsumer(t *testing.T) {
-	queue := make(chan ConsumerMessage, 1)
+	queue := make(chan interface{}, 1)
 
 	consumer, err := CreateExclusiveConsumer(ConsumerConfig{
 		Name:             "test9",
@@ -84,7 +86,8 @@ func TestExclusiveConsumer(t *testing.T) {
 
 	sendMessage("public/test/test9", []byte("test9"))
 
-	msg := safeReceive(queue)
+	msg := safeReceive(queue).(ConsumerMessage)
+	assert.Equal(t, []byte("test9"), msg.Payload)
 
 	err = consumer.AckIndividual(msg.ID)
 	assert.NoError(t, err)
@@ -94,7 +97,7 @@ func TestExclusiveConsumer(t *testing.T) {
 }
 
 func TestManualFlowControl(t *testing.T) {
-	queue := make(chan ConsumerMessage, 1)
+	queue := make(chan interface{}, 1)
 
 	consumer, err := CreateSharedConsumer(ConsumerConfig{
 		Name:         "test10",
@@ -116,7 +119,8 @@ func TestManualFlowControl(t *testing.T) {
 	err = consumer.Flow(1)
 	assert.NoError(t, err)
 
-	msg := safeReceive(queue)
+	msg := safeReceive(queue).(ConsumerMessage)
+	assert.Equal(t, []byte("test10"), msg.Payload)
 
 	err = consumer.AckIndividual(msg.ID)
 	assert.NoError(t, err)

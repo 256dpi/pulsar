@@ -1,21 +1,12 @@
 package pulsar
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/256dpi/pulsar/frame"
 )
-
-// ErrConsumerClosed is returned in callbacks to indicate that the producer or consumer
-// has been closed.
-var ErrConsumerClosed = errors.New("consumer closed")
-
-// ErrEndOfTopic is returned in the callback to indicate that the consumer
-// reached the end of the topic.
-var ErrEndOfTopic = errors.New("end of topic")
 
 // ConsumerConfig holds the configuration for a consumer.
 type ConsumerConfig struct {
@@ -67,10 +58,8 @@ type Consumer struct {
 	config ConsumerConfig
 	client *Client
 
-	cid    uint64
-	name   string
-	shared bool
-
+	cid     uint64
+	shared  bool
 	counter int
 
 	mutex sync.Mutex

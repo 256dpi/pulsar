@@ -10,6 +10,18 @@ import (
 
 const clientVersion = "github.com/256dpi/pulsar"
 
+// ErrProducerClosed is returned in callbacks to indicate that the producer has
+// been closed.
+var ErrProducerClosed = errors.New("producer closed")
+
+// ErrConsumerClosed is returned in callbacks to indicate that the consumer has
+// been closed.
+var ErrConsumerClosed = errors.New("consumer closed")
+
+// ErrEndOfTopic is returned in the callback to indicate that the reader
+// reached the end of the topic.
+var ErrEndOfTopic = errors.New("end of topic")
+
 // ErrClientClosed indicates that the client has been closed.
 var ErrClientClosed = errors.New("client closed")
 

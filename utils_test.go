@@ -49,7 +49,7 @@ func safeWait(ch <-chan struct{}) {
 	}
 }
 
-func safeReceive(ch <-chan ConsumerMessage) ConsumerMessage {
+func safeReceive(ch <-chan interface{}) interface{} {
 	select {
 	case msg := <-ch:
 		return msg
