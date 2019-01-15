@@ -206,18 +206,6 @@ func (c *Client) CreateProducer(name, topic string, rcb func(uint64, string, int
 				return
 			}
 
-			// check request id
-			if producerSuccess.RID != rid {
-				rcb(0, "", 0, fmt.Errorf("not matching request ids"))
-				return
-			}
-
-			// check name
-			if producerSuccess.Name != name {
-				rcb(0, "", 0, fmt.Errorf("not matching producer names"))
-				return
-			}
-
 			// call callback
 			rcb(pid, producerSuccess.Name, producerSuccess.LastSequence, nil)
 		}
