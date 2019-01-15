@@ -91,6 +91,9 @@ func (c *Conn) Send(f frame.Frame) error {
 	// write frame
 	err := frame.Write(f, c.writer)
 	if err != nil {
+		// ensure connection is closed
+		_ = c.closer.Close()
+
 		return err
 	}
 
@@ -105,6 +108,9 @@ func (c *Conn) Receive() (frame.Frame, error) {
 	// read next frame
 	f, err := frame.Read(c.reader)
 	if err != nil {
+		// ensure connection is closed
+		_ = c.closer.Close()
+
 		return nil, err
 	}
 
