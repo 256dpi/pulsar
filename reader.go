@@ -13,14 +13,20 @@ type ReaderConfig struct {
 	// The service URL of the Pulsar broker.
 	ServiceURL string
 
+	// The reader's name.
+	Name string
+
 	// The topic to attach to.
 	Topic string
 
 	// The subscription name.
 	Subscription string
 
-	// The reader's name.
-	Name string
+	// If set the reader will start from the earliest message available.
+	StartFromEarliestMessage bool
+
+	// If set the reader will start from the provided message.
+	StartMessageID *MessageID
 
 	// InflightMessages can be set to perform automatic flow control.
 	InflightMessages int
@@ -84,18 +90,21 @@ func CreateReader(config ReaderConfig) (*Reader, error) {
 		return nil, err
 	}
 
+	// prepare initial position
+	initialPos := frame.Latest
+	if config.StartFromEarliestMessage {
+		initialPos = frame.Earliest
+	}
+
 	// prepare reader
 	reader := &Reader{
 		config: config,
 		client: client,
 	}
 
-	// TODO: Configure start message id.
-	// TODO: Configure initial position.
-
 	// create reader
 	res := make(chan error, 1)
-	err = client.CreateConsumer(config.Name, config.Topic, config.Subscription, frame.Exclusive, false, func(cid uint64, err error) {
+	err = client.CreateConsumer(config.Name, config.Topic, config.Subscription, frame.Exclusive, false, initialPos, config.StartMessageID, func(cid uint64, err error) {
 		// set pid and sequence
 		reader.cid = cid
 
