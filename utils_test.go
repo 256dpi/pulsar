@@ -9,6 +9,38 @@ func ensureTopic(topic string) {
 	}
 }
 
+func sendMessage(topic string, payload []byte) {
+	producer, err := CreateProducer(ProducerConfig{
+		Topic: topic,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	msg := ProducerMessage{
+		Payload: payload,
+	}
+
+	done := make(chan struct{})
+	err = producer.Send(msg, func(_ ProducerMessage, cbErr error) {
+		if cbErr != nil {
+			panic(cbErr)
+		}
+
+		close(done)
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	safeWait(done)
+
+	err = producer.Close()
+	if err != nil {
+		panic(err)
+	}
+}
+
 func safeWait(ch <-chan struct{}) {
 	select {
 	case <-ch:
