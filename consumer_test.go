@@ -2,7 +2,6 @@ package pulsar
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -56,10 +55,6 @@ func TestFailoverConsumer(t *testing.T) {
 		},
 	})
 	assert.NoError(t, err)
-
-	println("first done")
-
-	time.Sleep(time.Second)
 
 	sendMessage("public/test/test8", []byte("test8"))
 
