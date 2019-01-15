@@ -31,7 +31,7 @@ type ConsumerConfig struct {
 	// The consumer's name.
 	Name string
 
-	// InflightMessages sets how many messages can be inflight.
+	// InflightMessages can be set to perform automatic flow control.
 	InflightMessages int
 
 	// The callback that is called with incoming messages.
@@ -151,20 +151,23 @@ func createGenericConsumer(config ConsumerConfig, typ frame.SubscriptionType) (*
 			Payload: msg.Payload,
 		})
 
-		// increment counter
-		consumer.counter++
+		// perform flow control if enabled
+		if config.InflightMessages > 0 {
+			// increment counter
+			consumer.counter++
 
-		// check flow
-		if consumer.counter > config.InflightMessages/2 {
-			// request more messages
-			err = client.Flow(consumer.cid, uint32(consumer.counter))
-			if err != nil {
-				config.ErrorCallback(err)
-				return
+			// check flow
+			if consumer.counter > config.InflightMessages/2 {
+				// request more messages
+				err = client.Flow(consumer.cid, uint32(consumer.counter))
+				if err != nil {
+					config.ErrorCallback(err)
+					return
+				}
+
+				// reset counter
+				consumer.counter = 0
 			}
-
-			// reset counter
-			consumer.counter = 0
 		}
 	})
 	if err != nil {
@@ -181,13 +184,34 @@ func createGenericConsumer(config ConsumerConfig, typ frame.SubscriptionType) (*
 		return nil, ErrTimeout
 	}
 
-	// issue first flow
-	err = client.Flow(consumer.cid, uint32(config.InflightMessages))
-	if err != nil {
-		return nil, err
+	// issue first flow if enabled
+	if config.InflightMessages > 0 {
+		err = client.Flow(consumer.cid, uint32(config.InflightMessages))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return consumer, nil
+}
+
+// Flow asks the broker to queue the specified amount of messages.
+func (c *Consumer) Flow(messages int) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	// check config
+	if c.config.InflightMessages > 0 {
+		return fmt.Errorf("automatic flow control enabled")
+	}
+
+	// send ack
+	err := c.client.Flow(c.cid, uint32(messages))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // AckIndividual will ack the specified message.

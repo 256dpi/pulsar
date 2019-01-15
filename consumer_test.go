@@ -92,3 +92,35 @@ func TestExclusiveConsumer(t *testing.T) {
 	err = consumer.Close()
 	assert.NoError(t, err)
 }
+
+func TestManualFlowControl(t *testing.T) {
+	queue := make(chan ConsumerMessage, 1)
+
+	consumer, err := CreateSharedConsumer(ConsumerConfig{
+		Name:             "test10",
+		Topic:            "public/test/test10",
+		Subscription:     "test10",
+		MessageCallback: func(msg ConsumerMessage) {
+			queue <- msg
+		},
+		ErrorCallback: func(err error) {
+			assert.NoError(t, err)
+		},
+	})
+	assert.NoError(t, err)
+
+	sendMessage("public/test/test10", []byte("test10"))
+
+	assert.Len(t, queue, 0)
+
+	err = consumer.Flow(1)
+	assert.NoError(t, err)
+
+	msg := safeReceive(queue)
+
+	err = consumer.AckIndividual(msg.ID)
+	assert.NoError(t, err)
+
+	err = consumer.Close()
+	assert.NoError(t, err)
+}
