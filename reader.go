@@ -189,12 +189,10 @@ func (c *Reader) Flow(messages int) error {
 	return nil
 }
 
-// Close will close the consumer.
+// Close will close the reader.
 func (c *Reader) Close() error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-
-	// TODO: Wait for all messages to be consumed?
 
 	// create producer
 	res := make(chan error, 1)

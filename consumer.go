@@ -246,12 +246,11 @@ func (c *Consumer) AckCumulative(mid frame.MessageID) error {
 	return nil
 }
 
-// Close will close the producer and potentially cancel outstanding send requests.
+// Close will close the consumer. It is the callers responsibility to make sure
+// messages have been acknowledged before calling Close.
 func (c *Consumer) Close() error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-
-	// TODO: Wait for all messages to be consumed?
 
 	// create producer
 	res := make(chan error, 1)

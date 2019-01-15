@@ -138,11 +138,11 @@ func (p *Producer) Name() string {
 }
 
 // Close will close the producer and potentially cancel outstanding send requests.
+// It is the callers responsibility to make sure all acknowledgements have been
+// received before calling Close.
 func (p *Producer) Close() error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
-
-	// TODO: Wait for all outstanding send requests to complete?
 
 	// create producer
 	res := make(chan error, 1)
