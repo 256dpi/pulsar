@@ -14,6 +14,9 @@ var magicByte = []byte{0x0e, 0x01}
 
 var crcTable = crc32.MakeTable(crc32.Castagnoli)
 
+// SizeLimit is the maximum allowed size of a frame.
+const SizeLimit = 5 * 1024 * 1024 // 5MB
+
 // Type defines the different frame types.
 type Type int
 
@@ -96,6 +99,11 @@ func Read(reader io.Reader) (Frame, error) {
 
 	// get total size
 	totalSize := int(binary.BigEndian.Uint32(totalSizeBytes))
+
+	// check frame size
+	if 4+totalSize > SizeLimit {
+		return nil, fmt.Errorf("received frame is too big")
+	}
 
 	// read complete frame
 	frameBytes := make([]byte, totalSize)
@@ -305,6 +313,11 @@ func Encode(frame Frame) ([]byte, error) {
 		// compute total size
 		totalSize := 4 + commandSize
 
+		// check frame size
+		if 4+totalSize > SizeLimit {
+			return nil, fmt.Errorf("to be written frame is too big")
+		}
+
 		// allocate final slice
 		data := make([]byte, 4+totalSize)
 
@@ -347,6 +360,11 @@ func Encode(frame Frame) ([]byte, error) {
 
 		// compute total size
 		totalSize := 4 + commandSize + 2 + 4 + 4 + metadataSize + payloadSize
+
+		// check frame size
+		if 4+totalSize > SizeLimit {
+			return nil, fmt.Errorf("to be written frame is too big")
+		}
 
 		// allocate final slice
 		data := make([]byte, 4+totalSize)
