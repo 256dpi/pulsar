@@ -1,6 +1,7 @@
 package pulsar
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -54,6 +55,7 @@ type Consumer struct {
 
 	cid  uint64
 	name string
+	shared bool
 
 	counter int
 
@@ -102,6 +104,7 @@ func createGenericConsumer(config ConsumerConfig, typ frame.SubscriptionType) (*
 	consumer := &Consumer{
 		config: config,
 		client: client,
+		shared: typ == frame.Shared,
 	}
 
 	// create consumer
@@ -185,6 +188,11 @@ func (c *Consumer) AckIndividual(mid frame.MessageID) error {
 func (c *Consumer) AckCumulative(mid frame.MessageID) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+
+	// check subscription type
+	if c.shared {
+		return fmt.Errorf("cumulative ack not supported for shared subscriptions")
+	}
 
 	// send ack
 	err := c.client.Ack(c.cid, frame.Cumulative, mid)
