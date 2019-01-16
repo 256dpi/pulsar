@@ -120,3 +120,68 @@ func BenchmarkConsumer(b *testing.B) {
 		panic(err)
 	}
 }
+
+func BenchmarkReader(b *testing.B) {
+	b.ReportAllocs()
+
+	queue := make(chan ReaderMessage, 100)
+
+	reader, err := CreateReader(ReaderConfig{
+		Topic:                    "public/test/bench3",
+		Subscription:             "bench3",
+		MessageCallback: func(msg ReaderMessage) {
+			queue <- msg
+		},
+		ErrorCallback: func(err error) {
+			panic(err)
+		},
+	})
+
+	producer, err := CreateProducer(ProducerConfig{
+		Topic: "public/test/bench3",
+		ErrorCallback: func(err error) {
+			panic(err)
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	msg := ProducerMessage{
+		Payload: []byte("bench3"),
+	}
+
+	for i:=0; i<b.N; i++ {
+		err = producer.Send(msg, func(_ ProducerMessage, err error) {
+			if err != nil {
+				panic(err)
+			}
+		})
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	err = reader.Flow(b.N)
+	if err != nil {
+		panic(err)
+	}
+
+	b.ResetTimer()
+
+	counter := 0
+
+	for {
+		<-queue
+
+		counter++
+		if counter == b.N {
+			break
+		}
+	}
+
+	err = reader.Close()
+	if err != nil {
+		panic(err)
+	}
+}
