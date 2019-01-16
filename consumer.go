@@ -74,12 +74,12 @@ type ConsumerConfig struct {
 	// Default: 10s.
 	CloseTimeout time.Duration
 
-	// The timeout after which writes to the underlying buffered writer are
-	// flushed. This value should not be set to low as it might trigger
-	// repeatedly launch goroutines that attempt fo flush the buffer.
+	// The maximum delay after which writes to the underlying buffered writer
+	// are flushed. This value should not be set to low as it might repeatedly
+	// trigger repeatedly goroutines that attempt fo flush the buffer.
 	//
-	// Default: 100ms.
-	WriteTimeout time.Duration
+	// Default: 10ms.
+	MaxWriteDelay time.Duration
 }
 
 // ConsumerMessage is a single message consumed by a consumer.
@@ -131,7 +131,7 @@ func CreateConsumer(config ConsumerConfig) (*Consumer, error) {
 	}
 
 	// set write timeout
-	clientConfig.WriteTimeout = config.WriteTimeout
+	clientConfig.MaxWriteDelay = config.MaxWriteDelay
 
 	// create client
 	client, err := Connect(clientConfig)

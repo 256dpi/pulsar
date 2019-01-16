@@ -36,12 +36,12 @@ type ClientConfig struct {
 	// Pulsar proxy that forwards the connection to the logical broker.
 	LogicalBrokerURL string
 
-	// The timeout after which writes to the underlying buffered writer are
-	// flushed. This value should not be set to low as it might trigger
-	// repeatedly launch goroutines that attempt fo flush the buffer.
+	// The maximum delay after which writes to the underlying buffered writer
+	// are flushed. This value should not be set to low as it might repeatedly
+	// trigger repeatedly goroutines that attempt fo flush the buffer.
 	//
-	// Default: 100ms.
-	WriteTimeout time.Duration
+	// Default: 10ms.
+	MaxWriteDelay time.Duration
 }
 
 // Client is the low level client that exchanges frames with the pulsar broker.
@@ -64,12 +64,12 @@ type Client struct {
 // Connect will connect to the provided broker and return a client.
 func Connect(config ClientConfig) (*Client, error) {
 	// set default write timeout
-	if config.WriteTimeout == 0 {
-		config.WriteTimeout = 100 * time.Millisecond
+	if config.MaxWriteDelay == 0 {
+		config.MaxWriteDelay = 10 * time.Millisecond
 	}
 
 	// create connection
-	conn, err := Dial(config.PhysicalBrokerURL, config.WriteTimeout)
+	conn, err := Dial(config.PhysicalBrokerURL, config.MaxWriteDelay)
 	if err != nil {
 		return nil, err
 	}
