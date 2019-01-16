@@ -89,6 +89,9 @@ type ConsumerMessage struct {
 
 	// The message payload.
 	Payload []byte
+
+	// The redelivery counter of the message.
+	RedeliveryCount int
 }
 
 // Consumer allows messages to be consumed from a Pulsar topic.
@@ -172,8 +175,9 @@ func CreateConsumer(config ConsumerConfig) (*Consumer, error) {
 
 		// call message callback
 		config.MessageCallback(ConsumerMessage{
-			ID:      msg.MessageID,
-			Payload: msg.Payload,
+			ID:              msg.MessageID,
+			Payload:         msg.Payload,
+			RedeliveryCount: int(msg.RedeliveryCount),
 		})
 
 		// perform flow control if enabled
