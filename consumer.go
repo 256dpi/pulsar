@@ -90,7 +90,9 @@ type ConsumerMessage struct {
 	// The message payload.
 	Payload []byte
 
-	// The redelivery counter of the message.
+	// TODO: Investigate correct behaviour.
+
+	// The number of delivery attempts to the current consumer.
 	RedeliveryCount int
 }
 
