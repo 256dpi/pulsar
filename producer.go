@@ -14,7 +14,8 @@ type ProducerConfig struct {
 	Topic string
 
 	// The callback that is called when the underlying client fails or the
-	// broker requested the producer to close and reconnect.
+	// broker requested the producer to close and reconnect. The underlying
+	// client is only closed on network level errors.
 	ErrorCallback func(err error)
 
 	/* Optional settings */

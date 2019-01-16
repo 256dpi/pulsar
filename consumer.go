@@ -40,7 +40,7 @@ type ConsumerConfig struct {
 
 	// The callback that is called when the consumer has been closed by the
 	// broker, the end of the topic has been reached or the underlying client
-	// failed.
+	// failed. The underlying client is only closed on network level errors.
 	ErrorCallback func(error)
 
 	/* Optional settings */
