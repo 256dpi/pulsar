@@ -17,7 +17,6 @@ func consumer() {
 		Name:             "example",
 		Topic:            "example",
 		Subscription:     "example",
-		SubscriptionType: pulsar.Exclusive,
 		InflightMessages: consumerInflightMessages,
 		MessageCallback: func(msg pulsar.ConsumerMessage) {
 			queue <- msg
