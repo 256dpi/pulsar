@@ -32,7 +32,7 @@ type Conn struct {
 
 // Dial will connect to the specified broker and establish a connection. It will
 // fallback to the default address "pulsar://localhost:6650" if missing.
-func Dial(addr string) (*Conn, error) {
+func Dial(addr string, writeTimeout time.Duration) (*Conn, error) {
 	// set default addr
 	if addr == "" {
 		addr = defaultAddr
@@ -71,15 +71,15 @@ func Dial(addr string) (*Conn, error) {
 		return nil, err
 	}
 
-	return NewConn(conn), nil
+	return NewConn(conn, writeTimeout), nil
 }
 
 // NewConn will create a connection from a ReadWriteCloser.
-func NewConn(carrier io.ReadWriteCloser) *Conn {
+func NewConn(carrier io.ReadWriteCloser, writeTimeout time.Duration) *Conn {
 	return &Conn{
 		reader: bufio.NewReader(carrier),
 		closer: carrier,
-		writer: mercury.NewWriter(carrier, time.Millisecond),
+		writer: mercury.NewWriter(carrier, writeTimeout),
 	}
 }
 

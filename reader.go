@@ -50,6 +50,13 @@ type ReaderConfig struct {
 	//
 	// Default: 10s.
 	CloseTimeout time.Duration
+
+	// The timeout after which writes to the underlying buffered writer are
+	// flushed. This value should not be set to low as it might trigger
+	// repeatedly launch goroutines that attempt fo flush the buffer.
+	//
+	// Default: 100ms.
+	WriteTimeout time.Duration
 }
 
 // ReaderMessage is a single message consumed by a reader.
@@ -89,6 +96,9 @@ func CreateReader(config ReaderConfig) (*Reader, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// set write timeout
+	clientConfig.WriteTimeout = config.WriteTimeout
 
 	// create client
 	client, err := Connect(clientConfig)

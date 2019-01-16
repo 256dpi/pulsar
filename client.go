@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/256dpi/pulsar/frame"
 )
@@ -34,6 +35,13 @@ type ClientConfig struct {
 	// The URL of the target Pulsar broker when the physical URL points to a
 	// Pulsar proxy that forwards the connection to the logical broker.
 	LogicalBrokerURL string
+
+	// The timeout after which writes to the underlying buffered writer are
+	// flushed. This value should not be set to low as it might trigger
+	// repeatedly launch goroutines that attempt fo flush the buffer.
+	//
+	// Default: 100ms.
+	WriteTimeout time.Duration
 }
 
 // Client is the low level client that exchanges frames with the pulsar broker.
@@ -54,9 +62,14 @@ type Client struct {
 }
 
 // Connect will connect to the provided broker and return a client.
-func Connect(cfg ClientConfig) (*Client, error) {
+func Connect(config ClientConfig) (*Client, error) {
+	// set default write timeout
+	if config.WriteTimeout == 0 {
+		config.WriteTimeout = 100 * time.Millisecond
+	}
+
 	// create connection
-	conn, err := Dial(cfg.PhysicalBrokerURL)
+	conn, err := Dial(config.PhysicalBrokerURL, config.WriteTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +77,7 @@ func Connect(cfg ClientConfig) (*Client, error) {
 	// create connect frame
 	connect := &frame.Connect{
 		ClientVersion:        clientVersion,
-		ProxyTargetBrokerURL: cfg.LogicalBrokerURL,
+		ProxyTargetBrokerURL: config.LogicalBrokerURL,
 	}
 
 	// send connect frame
