@@ -57,8 +57,8 @@ func BenchmarkConsumer(b *testing.B) {
 	queue := make(chan ConsumerMessage, 100)
 
 	consumer, err := CreateConsumer(ConsumerConfig{
-		Topic:                    "public/test/bench2",
-		Subscription:             "bench2",
+		Topic:        "public/test/bench2",
+		Subscription: "bench2",
 		MessageCallback: func(msg ConsumerMessage) {
 			queue <- msg
 		},
@@ -81,7 +81,7 @@ func BenchmarkConsumer(b *testing.B) {
 		Payload: []byte("bench2"),
 	}
 
-	for i:=0; i<b.N; i++ {
+	for i := 0; i < b.N; i++ {
 		err = producer.Send(msg, func(_ ProducerMessage, err error) {
 			if err != nil {
 				panic(err)
@@ -127,8 +127,8 @@ func BenchmarkReader(b *testing.B) {
 	queue := make(chan ReaderMessage, 100)
 
 	reader, err := CreateReader(ReaderConfig{
-		Topic:                    "public/test/bench3",
-		Subscription:             "bench3",
+		Topic:        "public/test/bench3",
+		Subscription: "bench3",
 		MessageCallback: func(msg ReaderMessage) {
 			queue <- msg
 		},
@@ -151,7 +151,7 @@ func BenchmarkReader(b *testing.B) {
 		Payload: []byte("bench3"),
 	}
 
-	for i:=0; i<b.N; i++ {
+	for i := 0; i < b.N; i++ {
 		err = producer.Send(msg, func(_ ProducerMessage, err error) {
 			if err != nil {
 				panic(err)
