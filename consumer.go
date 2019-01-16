@@ -29,41 +29,49 @@ type ConsumerConfig struct {
 	// The service URL of the Pulsar broker.
 	ServiceURL string
 
-	// The consumer's name.
-	Name string
-
 	// The topic to attach to.
 	Topic string
 
 	// The subscription name.
 	Subscription string
 
-	// The subscription type.
-	SubscriptionType SubscriptionType
-
-	// If set a newly created subscription will start from the earliest message
-	// available.
-	StartFromEarliestMessage bool
-
-	// InflightMessages can be set to perform automatic flow control.
-	InflightMessages int
-
 	// The callback that is called with incoming messages.
 	MessageCallback func(ConsumerMessage)
-
-	// The callback that is called when the state of the consumer has been
-	// changed by the broker.
-	StateCallback func(bool)
 
 	// The callback that is called when the consumer has been closed by the
 	// broker, the end of the topic has been reached or the underlying client
 	// failed.
 	ErrorCallback func(error)
 
+	/* Optional settings */
+
+	// The consumer name.
+	Name string
+
+	// The subscription type.
+	//
+	// Default: Exclusive.
+	SubscriptionType SubscriptionType
+
+	// If set a newly created subscription will start from the earliest message
+	// available instead of the latest.
+	StartFromEarliestMessage bool
+
+	// InflightMessages can be set to perform automatic flow control.
+	InflightMessages int
+
+	// The callback that is called when the state of the consumer has been
+	// changed by the broker.
+	StateCallback func(bool)
+
 	// The timeout after the creation request triggers and error.
+	//
+	// Default: 10s.
 	CreateTimeout time.Duration
 
 	// The timeout after the close request triggers and error.
+	//
+	// Default: 10s.
 	CloseTimeout time.Duration
 }
 
@@ -91,12 +99,17 @@ type Consumer struct {
 func CreateConsumer(config ConsumerConfig) (*Consumer, error) {
 	// set default create request timeout
 	if config.CreateTimeout == 0 {
-		config.CreateTimeout = DefaultTimeout
+		config.CreateTimeout = 10 * time.Second
 	}
 
 	// set default close request timeout
 	if config.CloseTimeout == 0 {
-		config.CloseTimeout = DefaultTimeout
+		config.CloseTimeout = 10 * time.Second
+	}
+
+	// set default empty state callback
+	if config.StateCallback == nil {
+		config.StateCallback = func(bool) {}
 	}
 
 	// perform lookup

@@ -13,14 +13,24 @@ type ReaderConfig struct {
 	// The service URL of the Pulsar broker.
 	ServiceURL string
 
-	// The reader's name.
-	Name string
-
 	// The topic to attach to.
 	Topic string
 
 	// The subscription name.
 	Subscription string
+
+	// The callback that is called with incoming messages.
+	MessageCallback func(ReaderMessage)
+
+	// The callback that is called when the reader has been closed by the
+	// broker, the end of the topic has been reached or the underlying client
+	// failed.
+	ErrorCallback func(error)
+
+	/* Optional settings */
+
+	// The reader name.
+	Name string
 
 	// If set the reader will start from the earliest message available.
 	StartFromEarliestMessage bool
@@ -31,18 +41,14 @@ type ReaderConfig struct {
 	// InflightMessages can be set to perform automatic flow control.
 	InflightMessages int
 
-	// The callback that is called with incoming messages.
-	MessageCallback func(ReaderMessage)
-
-	// The callback that is called when the reader has been closed by the
-	// broker, the end of the topic has been reached or the underlying client
-	// failed.
-	ErrorCallback func(error)
-
 	// The timeout after the creation request triggers and error.
+	//
+	// Default: 10s.
 	CreateTimeout time.Duration
 
 	// The timeout after the close request triggers and error.
+	//
+	// Default: 10s.
 	CloseTimeout time.Duration
 }
 
@@ -70,12 +76,12 @@ type Reader struct {
 func CreateReader(config ReaderConfig) (*Reader, error) {
 	// set default create request timeout
 	if config.CreateTimeout == 0 {
-		config.CreateTimeout = DefaultTimeout
+		config.CreateTimeout = 10 * time.Second
 	}
 
 	// set default close request timeout
 	if config.CloseTimeout == 0 {
-		config.CloseTimeout = DefaultTimeout
+		config.CloseTimeout = 10 * time.Second
 	}
 
 	// perform lookup
