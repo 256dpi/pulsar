@@ -44,6 +44,10 @@ type ClientConfig struct {
 	MaxWriteDelay time.Duration
 }
 
+type sendKey struct {
+	pid, seq uint64
+}
+
 // Client is the low level client that exchanges frames with the pulsar broker.
 type Client struct {
 	conn *Conn
@@ -54,7 +58,7 @@ type Client struct {
 
 	requestCallbacks  map[uint64]func(frame.Frame, error)
 	producerCallbacks map[uint64]func(frame.Frame, error)
-	sendCallbacks     map[string]func(frame.Frame, error)
+	sendCallbacks     map[sendKey]func(frame.Frame, error)
 	consumerCallbacks map[uint64]func(frame.Frame, error)
 
 	closed bool
@@ -116,7 +120,7 @@ func NewClient(conn *Conn) *Client {
 		conn:              conn,
 		requestCallbacks:  make(map[uint64]func(frame.Frame, error)),
 		producerCallbacks: make(map[uint64]func(frame.Frame, error)),
-		sendCallbacks:     make(map[string]func(frame.Frame, error)),
+		sendCallbacks:     make(map[sendKey]func(frame.Frame, error)),
 		consumerCallbacks: make(map[uint64]func(frame.Frame, error)),
 	}
 
@@ -290,7 +294,7 @@ func (c *Client) Send(pid, seq uint64, msg []byte, scb func(error)) error {
 
 	// store send callback
 	if scb != nil {
-		c.sendCallbacks[sendKey(pid, seq)] = func(res frame.Frame, err error) {
+		c.sendCallbacks[sendKey{pid, seq}] = func(res frame.Frame, err error) {
 			// handle error
 			if err != nil {
 				scb(err)
@@ -779,7 +783,7 @@ func (c *Client) handleProducerResponse(pid uint64, f frame.Frame) {
 
 func (c *Client) handleSendResponse(pid, seq uint64, f frame.Frame) {
 	// compute send key
-	key := sendKey(pid, seq)
+	key := sendKey{pid, seq}
 
 	// acquire mutex
 	c.mutex.Lock()
@@ -864,10 +868,6 @@ func (c *Client) die(err error) {
 	for _, cb := range c.consumerCallbacks {
 		cb(nil, err)
 	}
-}
-
-func sendKey(pid, seq uint64) string {
-	return fmt.Sprintf("%d:%d", pid, seq)
 }
 
 func boolPointer(value bool) *bool {
